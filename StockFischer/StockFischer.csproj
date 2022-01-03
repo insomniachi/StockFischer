@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>StockFischer</AssemblyName>
+    <RootNamespace>StockFischer</RootNamespace>
+  </PropertyGroup>
+
+  
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Events.WPF" Version="15.1.1" />
+    <PackageReference Include="ReactiveUI.Fody" Version="17.1.9" />
+    <PackageReference Include="ReactiveUI.WPF" Version="17.1.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Themes\Default\black_bishop.png" />
+    <Resource Include="Assets\Themes\Default\black_king.png" />
+    <Resource Include="Assets\Themes\Default\black_knight.png" />
+    <Resource Include="Assets\Themes\Default\black_pawn.png" />
+    <Resource Include="Assets\Themes\Default\black_queen.png" />
+    <Resource Include="Assets\Themes\Default\black_rook.png" />
+    <Resource Include="Assets\Themes\Default\white_bishop.png" />
+    <Resource Include="Assets\Themes\Default\white_king.png" />
+    <Resource Include="Assets\Themes\Default\white_knight.png" />
+    <Resource Include="Assets\Themes\Default\white_pawn.png" />
+    <Resource Include="Assets\Themes\Default\white_queen.png" />
+    <Resource Include="Assets\Themes\Default\white_rook.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenPGN\OpenPGN.csproj" />
+  </ItemGroup>
+
+</Project>

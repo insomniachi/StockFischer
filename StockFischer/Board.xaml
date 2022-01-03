@@ -1,0 +1,107 @@
+﻿<UserControl x:Class="StockFischer.Board"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:StockFischer"
+             xmlns:model="clr-namespace:StockFischer.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="400">
+    <UserControl.Resources>
+
+        <local:FileToCanvasPositionConverter x:Key="FileConverterWhite" Perspective="White"/>
+        <local:RankToCanvasPositionConverter x:Key="RankConverterWhite" Perspective="White"/>
+        <local:FileToCanvasPositionConverter x:Key="FileConverterBlack" Perspective="Black"/>
+        <local:RankToCanvasPositionConverter x:Key="RankConverterBlack" Perspective="Black"/>
+
+        <DrawingBrush x:Key="CheckerBoard" Stretch="None" TileMode="Tile" Viewport="0,0,2,2" ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="Tan">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,2,2" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="SaddleBrown">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="0,1,1,1" />
+                                <RectangleGeometry Rect="1,0,1,1" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+        
+
+        <DataTemplate DataType="{x:Type model:LivePiece}">
+            <Grid Width="1" Height="1" Tag="{Binding}">
+                <Image Width="0.8" Height="0.8" Source="{Binding Image}"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type model:LegalMove}">
+            <Grid Width="1" Height="1" IsHitTestVisible="False">
+                <Ellipse Width="0.3" Height="0.3">
+                    <Ellipse.Fill>
+                        <SolidColorBrush Color="Black" Opacity="0.2"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type model:LegalCapture}">
+            <Grid Width="1" Height="1" IsHitTestVisible="False">
+                <Ellipse Width="1" Height="1" StrokeThickness="0.1">
+                    <Ellipse.Stroke>
+                        <SolidColorBrush Color="Black" Opacity="0.2"/>
+                    </Ellipse.Stroke>
+                </Ellipse>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type model:CheckElement}">
+            <Grid Width="1" Height="1" IsHitTestVisible="False">
+                <Ellipse Width="1" Height="1" StrokeThickness="0.5">
+                    <Ellipse.Stroke>
+                        <SolidColorBrush Color="Black" Opacity="0.3"/>
+                    </Ellipse.Stroke>
+                </Ellipse>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type model:CheckMateElement}">
+            <Grid Width="1" Height="1" IsHitTestVisible="False">
+                <Ellipse Width="1" Height="1" StrokeThickness="0.1">
+                    <Ellipse.Fill>
+                        <SolidColorBrush Color="Blue" Opacity="0.3"/>
+                    </Ellipse.Fill>
+                    <Ellipse.Stroke>
+                        <SolidColorBrush Color="Black" Opacity="0.3"/>
+                    </Ellipse.Stroke>
+                </Ellipse>
+            </Grid>
+        </DataTemplate>
+
+    </UserControl.Resources>
+    <Grid>
+        <Viewbox>
+            <ItemsControl Name="ChessBoard">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas Width="8" Height="8" Background="{StaticResource CheckerBoard}" MouseDown="BoardMouseDown"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="FrameworkElement">
+                        <Setter Property="Canvas.Left" Value="{Binding Square.File, Converter={StaticResource FileConverterWhite}}"/>
+                        <Setter Property="Canvas.Top" Value="{Binding Square.Rank, Converter={StaticResource RankConverterWhite}}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Perspective, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Board}}" Value="Black">
+                                <Setter Property="Canvas.Left" Value="{Binding Square.File, Converter={StaticResource FileConverterBlack}}"/>
+                                <Setter Property="Canvas.Top" Value="{Binding Square.Rank, Converter={StaticResource RankConverterBlack}}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+            </ItemsControl>
+        </Viewbox>
+    </Grid>
+</UserControl>

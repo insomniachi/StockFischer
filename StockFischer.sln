@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenPGN", "OpenPGN\OpenPGN.csproj", "{998C7901-8474-41E5-97A0-9BFBBDC73518}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFischer", "StockFischer\StockFischer.csproj", "{0BA2C81B-12F5-4111-95B3-88930A6724B8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{998C7901-8474-41E5-97A0-9BFBBDC73518}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{998C7901-8474-41E5-97A0-9BFBBDC73518}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{998C7901-8474-41E5-97A0-9BFBBDC73518}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{998C7901-8474-41E5-97A0-9BFBBDC73518}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BA2C81B-12F5-4111-95B3-88930A6724B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BA2C81B-12F5-4111-95B3-88930A6724B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BA2C81B-12F5-4111-95B3-88930A6724B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BA2C81B-12F5-4111-95B3-88930A6724B8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
