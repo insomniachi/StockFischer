@@ -10,6 +10,7 @@ namespace StockFischer.Models.BoardElements.Pieces
 {
     internal class Pawn : LivePiece
     {
+        public override string Glyph => Color == Color.White ? "♙" : "♟︎"; 
         internal Pawn(Piece piece, Square square) : base(piece, square) { }
 
         public override IEnumerable<Square> GetPossibleMoves(BoardSetup boardSetup)

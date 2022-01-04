@@ -31,7 +31,7 @@ namespace StockFischer.Models
         public CheckElement(Square square) : base(square) { }
     }
 
-    public class CheckMateElement : LiveBoardElement
+    public class CheckMateElement : CheckElement
     {
         public CheckMateElement(Square square) : base(square) { }
     }

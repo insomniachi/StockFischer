@@ -107,8 +107,7 @@ public class LiveBoard : ReactiveObject
 
         ActiveColor = boardSetup.IsWhiteMove ? Color.White : Color.Black;
 
-        UpdateCheckElements(Color.White);
-        UpdateCheckElements(Color.Black);
+        UpdateCheckElements(ActiveColor);
 
         this.RaisePropertyChanged(nameof(BoardSetup));
     }
@@ -160,16 +159,104 @@ public class LiveBoard : ReactiveObject
     public static LiveBoard FromPgnFile(string file)
     {
         var board = NewGame();
-
-        foreach (var item in Game.FromPgnFile(file).MoveText)
+        var game = Game.FromPgnFile(file);
+        foreach (var item in game.MoveText)
         {
-            if (item is not MovePairEntry mpe) continue;
-
-            board.PlayMove(mpe.White, Color.White);
-            board.PlayMove(mpe.Black, Color.Black);
+            switch (item)
+            {
+                case MovePairEntry mpe:
+                    board.PlayMove(mpe.White, Color.White);
+                    board.PlayMove(mpe.Black, Color.Black);
+                    break;
+                case HalfMoveEntry hme:
+                    board.PlayMove(hme.Move, hme.IsContinued ? Color.Black : Color.White);
+                    break;
+            }
         }
 
+        board.GoToMove(board.Moves.Current);
+
         return board;
+    }
+
+    public void GoToMove(MoveModel move)
+    {
+        Load(BoardSetup.FromFen(move.Fen));
+    }
+
+    public void GoToStart()
+    {
+        if (!Moves.GoToStart()) return;
+        GoToMove(Moves.Current);
+    }
+
+    public void GoToEnd()
+    {
+        if (!Moves.GoToEnd()) return;
+        GoToMove(Moves.Current);
+    }
+
+    public void GoBack()
+    {
+        var model = Moves.Current;
+
+        if (Moves.GoBack() == false) return;
+
+        Clear<CheckElement>();
+
+        if(model.Move.PromotedPiece is PieceType)
+        {
+            var pawn = new Piece(PieceType.Pawn, model.Color);
+            BoardSetup[model.OriginSquare] = pawn;
+            Elements.Remove(GetElement<LivePiece>(x => x.Square == model.TargetSquare));
+            Elements.Add(LivePiece.GetPiece(pawn, model.TargetSquare));
+        }
+        else
+        {
+            BoardSetup[model.OriginSquare] = model.LivePiece.Piece;
+        }
+
+        GetElement<LivePiece>(x => x.Square == model.TargetSquare).Move(model.OriginSquare);
+
+        switch (model.Move.Type)
+        {
+            case MoveType.Simple:
+            case MoveType.DoublePawnMove:
+                BoardSetup[model.TargetSquare] = null;
+                break;
+            case MoveType.Capture:
+                BoardSetup[model.TargetSquare] = model.CapturedPiece.Piece;
+                Elements.Add(LivePiece.GetPiece(model.CapturedPiece.Piece, model.TargetSquare));
+                break;
+            case MoveType.CaptureEnPassant:
+                var capturedPieceSquare = model.TargetSquare.Down(model.Color);
+                BoardSetup[capturedPieceSquare] = model.CapturedPiece.Piece;
+                Elements.Add(LivePiece.GetPiece(model.CapturedPiece.Piece, capturedPieceSquare));
+                break;
+            case MoveType.CastleKingSide:
+                var kingRookSquare = model.Color == Color.White ? Square.F1 : Square.F8;
+                var kingRookOrigin = model.Color == Color.White ? Square.H1 : Square.H8;
+                BoardSetup[kingRookSquare] = null;
+                GetElement<LivePiece>(x => x.Square == kingRookSquare).Move(kingRookOrigin);
+                break;
+            case MoveType.CastleQueenSide:
+                var queenRookSquare = model.Color == Color.White ? Square.D1 : Square.D8;
+                var queenRookOrigin = model.Color == Color.White ? Square.A1 : Square.A8;
+                BoardSetup[queenRookSquare] = null;
+                GetElement<LivePiece>(x => x.Square == queenRookSquare).Move(queenRookOrigin);
+                break;
+        }
+
+        UpdateCheckElements(model.Color.Invert());
+    }
+
+    public bool GoForward()
+    {
+        if (Moves.GoForward() == false) return false;
+        if (Moves.Current is null) return false;
+
+        OnMovePlayed(Moves.Current, true);
+        return true;
     }
 
     /// <summary>
@@ -189,12 +276,10 @@ public class LiveBoard : ReactiveObject
                 SelectedPiece = Elements.OfType<LivePiece>().Single(x => x.Square == square);
                 return false;
             }
-            // Else clear move hints if there were any
-            else
-            {
-                Clear<LegalMove>();
-                return false;
-            }
+
+            Clear<LegalMove>();
+
+            return false;
         }
         else
         {
@@ -232,13 +317,14 @@ public class LiveBoard : ReactiveObject
                 // make sure the the selected piece could actually move to that square
                 if (!SelectedPiece.GetLegalMoves(BoardSetup).Contains(square))
                 {
+                    Clear<LegalMove>();
                     return false;
                 }
 
                 // Check if it's a castling move (https://en.wikipedia.org/wiki/Castling).
                 if (SelectedPiece is King king &&
                     (king.CanCastleKingSide || king.CanCastleQueenSide) &&
-                    (square == king.KingSideCasleSquare || square == king.QueenSideCastleSquare))
+                    (square == king.KingSideCastleSquare || square == king.QueenSideCastleSquare))
                 {
                     BoardSetup.EnPassantSquare = null;
                     Castle(SelectedPiece, square);
@@ -306,9 +392,9 @@ public class LiveBoard : ReactiveObject
 
         OnMovePlayed(new MoveModel(move)
         {
-            Piece = piece,
+            LivePiece = piece,
             TargetSquare = square,
-            PieceType = piece.Type
+            OriginSquare = piece.Square
         });
     }
 
@@ -336,9 +422,10 @@ public class LiveBoard : ReactiveObject
 
         OnMovePlayed(new MoveModel(move)
         {
-            Piece = piece,
+            LivePiece = piece,
             TargetSquare = square,
-            PieceType = piece.Type
+            OriginSquare = piece.Square,
+            CapturedPiece = GetElement<LivePiece>(x => x.Square == square)
         });
     }
 
@@ -359,9 +446,10 @@ public class LiveBoard : ReactiveObject
 
         OnMovePlayed(new MoveModel(move)
         {
-            Piece = piece,
+            LivePiece = piece,
             TargetSquare = square,
-            PieceType = piece.Type
+            OriginSquare = piece.Square,
+            CapturedPiece = GetElement<LivePiece>(x => x.Square == square)
         });
     }
 
@@ -385,9 +473,10 @@ public class LiveBoard : ReactiveObject
 
         OnMovePlayed(new MoveModel(move)
         {
-            Piece = piece,
+            LivePiece = piece,
             TargetSquare = square,
-            PieceType = piece.Type
+            OriginSquare = piece.Square,
+            CapturedPiece = move.Type == MoveType.Capture ? GetElement<LivePiece>(x => x.Square == square) : null
         });
     }
 
@@ -410,9 +499,9 @@ public class LiveBoard : ReactiveObject
 
         OnMovePlayed(new MoveModel(move)
         {
-            Piece = piece,
+            LivePiece = piece,
             TargetSquare = square,
-            PieceType = piece.Type
+            OriginSquare = piece.Square
         });
     }
 
@@ -445,7 +534,7 @@ public class LiveBoard : ReactiveObject
     /// <param name="moveModel">Move played</param>
     private void UpdateMoveOnBoard(MoveModel moveModel)
     {
-        var piece = moveModel.Piece;
+        var piece = GetElement<LivePiece>(x => x.Square == moveModel.OriginSquare);
         var color = piece.Color;
         Piece promotedPiece = null;
 
@@ -491,11 +580,11 @@ public class LiveBoard : ReactiveObject
                 BoardSetup.CanBlackCastleKingSide = BoardSetup.CanBlackCastleQueenSide = false;
                 break;
             case MoveType.CaptureEnPassant:
-            {
-                var captureSquare = moveModel.TargetSquare.Down(piece.Color);
-                BoardSetup[captureSquare] = null;
-                break;
-            }
+                {
+                    var captureSquare = moveModel.TargetSquare.Down(piece.Color);
+                    BoardSetup[captureSquare] = null;
+                    break;
+                }
         }
 
 
@@ -543,7 +632,7 @@ public class LiveBoard : ReactiveObject
     /// <param name="color"></param>
     /// <returns></returns>
     private King GetKing(Color color) => GetElements<King>().Single(x => x.Color == color);
-    
+
     /// <summary>
     /// Helper function to get UI models for specific type
     /// </summary>
@@ -577,7 +666,7 @@ public class LiveBoard : ReactiveObject
     /// Validate game state (check, checkmate etc)
     /// </summary>
     /// <param name="move"></param>
-    private void OnMovePlayed(MoveModel move)
+    private void OnMovePlayed(MoveModel move, bool isRewinding = false)
     {
         Clear<CheckElement>();
 
@@ -587,7 +676,10 @@ public class LiveBoard : ReactiveObject
 
         UpdateGameState(move);
 
-        AddMoveToHistory(move);
+        if (isRewinding == false)
+        {
+            AddMoveToHistory(move);
+        }
     }
 
     /// <summary>
@@ -761,7 +853,7 @@ public class LiveBoard : ReactiveObject
             return;
         }
 
-        var piece = moveModel.Piece;
+        var piece = moveModel.LivePiece;
 
         var otherPieces = Elements.OfType<LivePiece>().Where(x =>
             x.Type == piece.Type && x.Color == piece.Color && x.Square != piece.Square);
@@ -801,7 +893,6 @@ public class LiveBoard : ReactiveObject
         var model = new MoveModel(move)
         {
             TargetSquare = move.TargetSquare,
-            PieceType = move.Piece
         };
 
         var pieces = GetElements<LivePiece>()
@@ -810,13 +901,14 @@ public class LiveBoard : ReactiveObject
             .Where(x => x.GetLegalMoves(BoardSetup).Contains(move.TargetSquare))
             .ToList();
 
+
         LivePiece piece = null;
 
         if (move.Type is MoveType.CastleKingSide or MoveType.CastleQueenSide)
         {
             var king = GetKing(color);
             piece = king;
-            model.TargetSquare = move.TargetSquare = move.Type == MoveType.CastleKingSide ? king.KingSideCasleSquare : king.QueenSideCastleSquare;
+            model.TargetSquare = move.TargetSquare = move.Type == MoveType.CastleKingSide ? king.KingSideCastleSquare : king.QueenSideCastleSquare;
         }
         else if (pieces.Count > 1)
         {
@@ -838,7 +930,15 @@ public class LiveBoard : ReactiveObject
             piece = pieces.Single();
         }
 
-        model.Piece = piece;
+        model.LivePiece = piece;
+        model.OriginSquare = piece!.Square;
+        model.CapturedPiece = move.Type switch
+        {
+            MoveType.Capture => GetElement<LivePiece>(x => x.Square == move.TargetSquare),
+            MoveType.CaptureEnPassant => GetElement<LivePiece>(x => x.Square == move.TargetSquare!.Down(model.Color)),
+            _ => model.CapturedPiece
+        };
+
         OnMovePlayed(model);
     }
 }

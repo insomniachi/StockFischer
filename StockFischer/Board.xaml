@@ -86,7 +86,9 @@
             <ItemsControl Name="ChessBoard">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Canvas Width="8" Height="8" Background="{StaticResource CheckerBoard}" MouseDown="BoardMouseDown"/>
+                        <Canvas Width="8" Height="8" 
+                                Background="{StaticResource CheckerBoard}"
+                                MouseDown="BoardMouseDown"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>

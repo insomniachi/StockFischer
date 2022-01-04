@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace StockFischer
 {
@@ -29,14 +30,14 @@ namespace StockFischer
 
         public LiveBoard LiveBoard
         {
-            get { return (LiveBoard)GetValue(LiveBoardProperty); }
-            set { SetValue(LiveBoardProperty, value); }
+            get => (LiveBoard)GetValue(LiveBoardProperty);
+            set => SetValue(LiveBoardProperty, value);
         }
 
         public Color Perspective
         {
-            get { return (Color)GetValue(PerspectiveProperty); }
-            set { SetValue(PerspectiveProperty, value); }
+            get => (Color)GetValue(PerspectiveProperty);
+            set => SetValue(PerspectiveProperty, value);
         }
 
         private static void OnLiveBoardChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -49,17 +50,17 @@ namespace StockFischer
             }
         }
 
-        private void BoardMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void BoardMouseDown(object sender, MouseButtonEventArgs e)
         {
             var pos = e.GetPosition(sender as Canvas);
-            int x = (int)pos.X;
-            int y = (int)pos.Y;
+            var x = (int)pos.X;
+            var y = (int)pos.Y;
 
-            Square square = Perspective == Color.White
+            var square = Perspective == Color.White
                 ? Square.New(FileExtensions.FromInt(x, true), 8 - y)
                 : Square.New(FileExtensions.FromInt(7 - x, true), y + 1);
 
-            if(e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            if(e.LeftButton == MouseButtonState.Pressed)
             {
                 LiveBoard.OnSquareSelected(square);
             }

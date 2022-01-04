@@ -12,23 +12,24 @@ namespace StockFischer.Models.BoardElements.Pieces
         public bool CanCastleKingSide { get; set; }
         public bool CanCastleQueenSide { get; set; }
 
-        public Square KingSideCasleSquare { get; }
+        public Square KingSideCastleSquare { get; }
         public Square QueenSideCastleSquare { get; }
+        public override string Glyph => Color == Color.White ? "♔" : "♚"; 
 
         public King(Piece piece, Square square) : base(piece, square)
         {
-            KingSideCasleSquare = piece.Color == Color.White ? Square.G1 : Square.G8;
+            KingSideCastleSquare = piece.Color == Color.White ? Square.G1 : Square.G8;
             QueenSideCastleSquare = piece.Color == Color.White ? Square.C1 : Square.C8;
         }
         public override MoveTemplate MoveTemplate { get; } = MoveTemplate.King;
         public override IEnumerable<Square> GetLegalMoves(BoardSetup boardSetup)
         {
             var candidates = MoveTemplate.GetMoves(Square)
-                .Where(x => boardSetup[x] is null || boardSetup[x] is Piece p && p.Color != Color).ToList();
+                .Where(x => boardSetup[x] is null || boardSetup[x] is { } p && p.Color != Color).ToList();
 
             if (Color == Color.White ? boardSetup.CanWhiteCastleKingSide : boardSetup.CanBlackCastleKingSide && CanCastleKingSide)
             {
-                candidates.Add(KingSideCasleSquare);
+                candidates.Add(KingSideCastleSquare);
             }
             if (Color == Color.White ? boardSetup.CanWhiteCastleQueenSide : boardSetup.CanBlackCastleQueenSide && CanCastleQueenSide)
             {

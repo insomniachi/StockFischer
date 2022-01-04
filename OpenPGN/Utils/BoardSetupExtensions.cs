@@ -120,10 +120,7 @@ namespace OpenPGN
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 start = start.Move(player, 1, 1);
@@ -144,10 +141,7 @@ namespace OpenPGN
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 start = start.Move(player, 1, -1);
@@ -168,10 +162,7 @@ namespace OpenPGN
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 start = start.Move(player, -1, 1);
@@ -193,10 +184,7 @@ namespace OpenPGN
                             result.IsAttacked = true;
                             result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                         }
-                        else
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
 
@@ -226,10 +214,7 @@ namespace OpenPGN
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 start = start.Right(player);
@@ -250,10 +235,7 @@ namespace OpenPGN
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
                 start = start.Left(player);
             }
@@ -282,10 +264,7 @@ namespace OpenPGN
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 start = start.Up(player);
@@ -305,8 +284,9 @@ namespace OpenPGN
                     {
                         result.IsAttacked = true;
                         result.Attacks.Add(new Attack(start, p, boardSetup.IsSquarePinned(start, boardSetup.GetKingPosition(attacker), attacker.Invert())));
-                        break;
                     }
+                    break;
+
                 }
                 start = start.Down(player);
             }

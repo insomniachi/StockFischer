@@ -17,6 +17,8 @@ namespace StockFischer.Models
         public Color Color { get; set; }
         public Square Square { get; private set; }
         public string Image { get; set; }
+        public  abstract string Glyph { get; }
+        
         protected LivePiece(Piece piece, Square square)
         {
             Piece = piece;

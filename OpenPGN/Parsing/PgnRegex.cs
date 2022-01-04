@@ -88,7 +88,7 @@ namespace OpenPGN.Parsing
             {
                 bool hasWhiteMove = groups.Any(x => x.Key.Contains("White") && x.Value.Success);
                 bool hasBlackMove = groups.Any(x => x.Key.Contains("Black") && x.Value.Success);
-                return hasWhiteMove && hasWhiteMove;
+                return hasWhiteMove && hasBlackMove;
             });
         }
 

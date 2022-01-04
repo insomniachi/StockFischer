@@ -6,6 +6,8 @@ namespace StockFischer.Models.BoardElements.Pieces
 {
     internal class Knight : LivePiece
     {
+        public override string Glyph => Color == Color.White ? "♘" : "♞"; 
+        
         static List<(int Up, int Right)> moveTemplate = new()
         {
             new(1,2),

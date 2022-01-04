@@ -10,6 +10,8 @@
 
   
   <ItemGroup>
+    <PackageReference Include="Fluent.Ribbon" Version="9.0.1" />
+    <PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
     <PackageReference Include="ReactiveUI.Events.WPF" Version="15.1.1" />
     <PackageReference Include="ReactiveUI.Fody" Version="17.1.9" />
     <PackageReference Include="ReactiveUI.WPF" Version="17.1.9" />
@@ -28,6 +30,8 @@
     <Resource Include="Assets\Themes\Default\white_pawn.png" />
     <Resource Include="Assets\Themes\Default\white_queen.png" />
     <Resource Include="Assets\Themes\Default\white_rook.png" />
+    <None Remove="Assets\chess-board.png" />
+    <Resource Include="Assets\chess-board.png" />
   </ItemGroup>
 
   <ItemGroup>
