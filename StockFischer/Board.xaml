@@ -40,25 +40,25 @@
                 <Image Width="0.8" Height="0.8" Source="{Binding Image}"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type model:LegalMove}">
+        <DataTemplate DataType="{x:Type model:SquareHighlight}">
             <Grid Width="1" Height="1" IsHitTestVisible="False">
                 <Ellipse Width="0.3" Height="0.3">
                     <Ellipse.Fill>
-                        <SolidColorBrush Color="Black" Opacity="0.2"/>
+                        <SolidColorBrush Color="{Binding Color}" Opacity="0.2"/>
                     </Ellipse.Fill>
                 </Ellipse>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type model:LegalCapture}">
+        <DataTemplate DataType="{x:Type model:SquareHighlight2}">
             <Grid Width="1" Height="1" IsHitTestVisible="False">
                 <Ellipse Width="1" Height="1" StrokeThickness="0.1">
                     <Ellipse.Stroke>
-                        <SolidColorBrush Color="Black" Opacity="0.2"/>
+                        <SolidColorBrush Color="{Binding Color}" Opacity="0.2"/>
                     </Ellipse.Stroke>
                 </Ellipse>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type model:CheckElement}">
+        <DataTemplate DataType="{x:Type model:Check}">
             <Grid Width="1" Height="1" IsHitTestVisible="False">
                 <Ellipse Width="1" Height="1" StrokeThickness="0.5">
                     <Ellipse.Stroke>
@@ -67,7 +67,7 @@
                 </Ellipse>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type model:CheckMateElement}">
+        <DataTemplate DataType="{x:Type model:Checkmate}">
             <Grid Width="1" Height="1" IsHitTestVisible="False">
                 <Ellipse Width="1" Height="1" StrokeThickness="0.1">
                     <Ellipse.Fill>
@@ -77,6 +77,11 @@
                         <SolidColorBrush Color="Black" Opacity="0.3"/>
                     </Ellipse.Stroke>
                 </Ellipse>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type model:ShapeElement}">
+            <Grid Width="1" Height="1" IsHitTestVisible="False">
+                <Path Data="{Binding Shape}" Fill="Black" Stroke="Black" StrokeThickness="1"/>
             </Grid>
         </DataTemplate>
 

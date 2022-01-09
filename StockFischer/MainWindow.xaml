@@ -19,15 +19,22 @@
         
         <fluent:Ribbon Grid.Row="0" Focusable="False">
             <!--Tabs-->
-            <fluent:RibbonTabItem Header="Analyze">
+            <fluent:RibbonTabItem Header="Home">
                 <fluent:RibbonGroupBox Header="PGN">
                     <fluent:Button Header="Open"
                                    LargeIcon="Assets/chess-board.png"
                                    Width="50"
                                    Command="{Binding OpenPgnCommand}"/>
-                    <fluent:Button Header="Save"
+                </fluent:RibbonGroupBox>
+                <fluent:RibbonGroupBox Header="Engine">
+                    <fluent:Button Header="Auto Play"
                                    LargeIcon="Assets/chess-board.png"
-                                   Width="50"/>
+                                   Width="50"
+                                   Command="{Binding AutoPlayCommand}"/>
+                    <fluent:Button Header="Stop"
+                                   LargeIcon="Assets/chess-board.png"
+                                   Width="50"
+                                   Command="{Binding StopEngineCommand}"/>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
         </fluent:Ribbon>
@@ -50,6 +57,7 @@
                     <Button Content="Load" Command="{Binding LoadFenCommand}"/>
                 </StackPanel>
                 <Button Content="Toggle" Command="{Binding TogglePerspectiveCommand}"/>
+                <TextBlock Text="{Binding EngineVariation}" TextWrapping="Wrap"/>
             </StackPanel>
         </Grid>
     </Grid>

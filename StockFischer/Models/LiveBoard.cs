@@ -7,6 +7,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using StockFischer.Services;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows;
+using UIColors = System.Windows.Media.Colors;
 
 namespace StockFischer.Models;
 
@@ -39,7 +44,7 @@ public class LiveBoard : ReactiveObject
     /// <summary>
     /// Active Player Color
     /// </summary>
-    private Color ActiveColor { get; set; } = Color.White;
+    public Color ActiveColor { get; private set; } = Color.White;
 
     /// <summary>
     /// Selected Piece, Updated when active player clicks one of his pieces
@@ -59,7 +64,7 @@ public class LiveBoard : ReactiveObject
 
             if (_selectedPiece is null)
             {
-                Clear<LegalMove>();
+                Clear<SquareHighlight>();
             }
             else
             {
@@ -117,19 +122,19 @@ public class LiveBoard : ReactiveObject
         var king = GetKing(color);
 
         if (BoardSetup.GetGameState(ActiveColor) == GameState.Check)
-            Elements.Add(new CheckElement(king.Square));
+            Elements.Add(new Check(king.Square));
         else if (BoardSetup.GetGameState(ActiveColor) == GameState.DoubleCheck)
-            Elements.Add(new CheckElement(king.Square));
+            Elements.Add(new Check(king.Square));
         else if (BoardSetup.GetGameState(ActiveColor) == GameState.CheckMate)
-            Elements.Add(new CheckMateElement(king.Square));
+            Elements.Add(new Checkmate(king.Square));
     }
 
     /// <summary>
     /// Models for UI Elements that is drawn on top of the chess board
     /// This can be
     /// 1. Chess Pieces <see cref="LivePiece"/>
-    /// 2. Highlights to show legal moves <see cref="LegalMove"/> <see cref="LegalCapture"/>
-    /// 3. Highlights to show game state <see cref="CheckElement"/> <see cref="CheckMateElement"/>
+    /// 2. Highlights to show legal moves <see cref="SquareHighlight"/> <see cref="SquareHighlight2"/>
+    /// 3. Highlights to show game state <see cref="Check"/> <see cref="Checkmate"/>
     /// 4. Arrows to indicate moves
     /// 5. Move Annotations
     /// </summary>
@@ -202,7 +207,7 @@ public class LiveBoard : ReactiveObject
 
         if (Moves.GoBack() == false) return;
 
-        Clear<CheckElement>();
+        Clear<Check>();
 
         if(model.Move.PromotedPiece is PieceType)
         {
@@ -259,13 +264,25 @@ public class LiveBoard : ReactiveObject
         return true;
     }
 
+    public void OnHighlightSquareSelected(Square square)
+    {
+        if (GetElements<SquareHighlight2>().SingleOrDefault(x => x.Square == square) is { } highlight)
+        {
+            Elements.Remove(highlight);
+        }
+        else
+        {
+            Elements.Add(new SquareHighlight2(square) { Color = UIColors.DarkRed });
+        }
+    }
+
     /// <summary>
     /// Called whenever there is a click on top of the board
     /// Will get called even if is no piece on that square
     /// </summary>
     /// <param name="square">Square on which user clicked</param>
     /// <returns>Returns whether this user interaction cased a move to happen</returns>
-    public bool OnSquareSelected(Square square)
+    public bool OnMoveOriginSquareSelected(Square square)
     {
         if (SelectedPiece is null)
         {
@@ -277,7 +294,7 @@ public class LiveBoard : ReactiveObject
                 return false;
             }
 
-            Clear<LegalMove>();
+            Clear<SquareHighlight>();
 
             return false;
         }
@@ -317,7 +334,7 @@ public class LiveBoard : ReactiveObject
                 // make sure the the selected piece could actually move to that square
                 if (!SelectedPiece.GetLegalMoves(BoardSetup).Contains(square))
                 {
-                    Clear<LegalMove>();
+                    Clear<SquareHighlight>();
                     return false;
                 }
 
@@ -368,7 +385,7 @@ public class LiveBoard : ReactiveObject
 
         SelectedPiece = GetElements<LivePiece>().Single(x => x.Square == from);
 
-        return OnSquareSelected(to);
+        return OnMoveOriginSquareSelected(to);
     }
 
     /// <summary>
@@ -516,15 +533,15 @@ public class LiveBoard : ReactiveObject
             return;
         }
 
-        Clear<LegalMove>();
+        Clear<SquareHighlight>();
 
         var candidates = piece.GetLegalMoves(BoardSetup);
 
         foreach (var candidate in candidates)
         {
             Elements.Add(BoardSetup[candidate] is not null
-                ? new LegalCapture(candidate)
-                : new LegalMove(candidate));
+                ? new SquareHighlight2(candidate)
+                : new SquareHighlight(candidate));
         }
     }
 
@@ -659,6 +676,13 @@ public class LiveBoard : ReactiveObject
         prevSuggestions.ForEach(x => Elements.Remove(x));
     }
 
+    private void Clear<T>(Func<T, bool> condition)
+        where T : ILiveBoardElement
+    {
+        var prevSuggestions = Elements.OfType<T>().Where(x => condition(x)).ToList();
+        prevSuggestions.ForEach(x => Elements.Remove(x));
+    }
+
     /// <summary>
     /// Called after a move is played
     /// This will update <see cref="BoardSetup"/>
@@ -668,9 +692,12 @@ public class LiveBoard : ReactiveObject
     /// <param name="move"></param>
     private void OnMovePlayed(MoveModel move, bool isRewinding = false)
     {
-        Clear<CheckElement>();
+        Clear<Check>();
 
-        ResolveAmbiguousMove(move);
+        if (isRewinding == false)
+        {
+            ResolveAmbiguousMove(move); 
+        }
 
         UpdateMoveOnBoard(move);
 
@@ -714,15 +741,15 @@ public class LiveBoard : ReactiveObject
         {
             case GameState.Check:
                 moveModel.Move.IsCheck = true;
-                Elements.Add(new CheckElement(king.Square));
+                Elements.Add(new Check(king.Square));
                 break;
             case GameState.DoubleCheck:
                 moveModel.Move.IsDoubleCheck = true;
-                Elements.Add(new CheckElement(king.Square));
+                Elements.Add(new Check(king.Square));
                 break;
             case GameState.CheckMate:
                 moveModel.Move.IsCheckMate = true;
-                Elements.Add(new CheckMateElement(king.Square));
+                Elements.Add(new Checkmate(king.Square));
                 break;
             case GameState.None:
                 break;

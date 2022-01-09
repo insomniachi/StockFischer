@@ -62,7 +62,11 @@ namespace StockFischer
 
             if(e.LeftButton == MouseButtonState.Pressed)
             {
-                LiveBoard.OnSquareSelected(square);
+                LiveBoard.OnMoveOriginSquareSelected(square);
+            }
+            else if(e.RightButton == MouseButtonState.Pressed)
+            {
+                LiveBoard.OnHighlightSquareSelected(square);
             }
 
         }
