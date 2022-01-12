@@ -38,6 +38,7 @@ namespace StockFischer.ViewModels
         {
             if(e.PropertyName == "Current")
             {
+                StopEngine();
                 _engine.SetFenPosition(Board.Moves.Current.Fen);
                 await Task.Delay(500);
                 _engine.Go();
@@ -54,6 +55,7 @@ namespace StockFischer.ViewModels
         public PotentialVariation EngineVariation { get; set; }
 
         public string InputFen { get; set; }
+        public bool AutoPlayEnabled { get; set; }
 
         public ICommand LoadFenCommand { get; set; }
         public ICommand TogglePerspectiveCommand { get; set; }
@@ -94,19 +96,19 @@ namespace StockFischer.ViewModels
         /// <param name="e"></param>
         private void OnPotentialVariationCalculated(object sender, PotentialVariation e)
         {
-            if(e.Depth == 27)
+            // if engine is calculating blacks move, invert the evaluation
+            if(Board.ActiveColor == Color.Black)
             {
-                // if engine is calculating blacks move, invert the evaluation
-                if(Board.ActiveColor == Color.Black)
-                {
-                    e.Evaluation *= -1;
-                }
+                e.Evaluation *= -1;
+                e.MateIn *= -1;
+            }
 
+            var move = e.Moves.First();
+
+            if (AutoPlayEnabled && e.Depth == 27)
+            {
                 StopEngine();
-
-                var move = EngineVariation.Moves.First();
-
-                Application.Current.Dispatcher.Invoke(() => Board.TryMove(move.OriginSquare, move.TargetSquare));
+                Application.Current.Dispatcher.Invoke(() => Board.TryMove(move.OriginSquare, move.TargetSquare)); 
             }
 
             EngineVariation = e;
@@ -141,6 +143,8 @@ namespace StockFischer.ViewModels
         /// </summary>
         private void AutoPlay()
         {
+            AutoPlayEnabled = true;
+
             if(Board.Moves.Current is null)
             {
                 _engine.SetNewGamePosition();

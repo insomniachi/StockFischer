@@ -39,18 +39,23 @@
             </fluent:RibbonTabItem>
         </fluent:Ribbon>
         
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Margin="0 10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="500"/>
             </Grid.ColumnDefinitions>
+
+            <local:EvaluationBar Evaluation="{Binding EngineVariation.Evaluation}" Width="40" Margin="10 0"/>
+
             <local:Board LiveBoard="{Binding Board}" 
                          Perspective="{Binding Perspective}"
-                         Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" HorizontalAlignment="Left"/>
+                         Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" HorizontalAlignment="Left"
+                         Grid.Column="1"/>
 
 
-            <StackPanel Grid.Column="1" HorizontalAlignment="Left">
-                <local:MoveList Grid.Column="1" Moves="{Binding Board.Moves, Mode=OneWay}" Height="500"/>
+            <StackPanel Grid.Column="2" HorizontalAlignment="Left">
+                <local:MoveList Moves="{Binding Board.Moves, Mode=OneWay}" Height="500"/>
                 <TextBox Text="{Binding Board.BoardSetup,Mode=OneWay}" IsReadOnly="True"/>
                 <StackPanel Orientation="Horizontal">
                     <TextBox Text="{Binding InputFen, Mode=TwoWay}" Width="250"/>

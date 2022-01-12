@@ -9,7 +9,7 @@ namespace StockFischer.Engine
 {
     public class PotentialVariation
     {
-        private static readonly Regex _pvRegex = new(@"depth (?'Depth'\d+).*multipv (?'Id'\d+).*cp (?'Eval'-?\d+).*nps (?'NPS'\d+).*pv (?'PV'(([a-h][1-8][qrbk]?){2}\s?)+)", RegexOptions.Compiled);
+        private static readonly Regex _pvRegex = new(@"depth (?'Depth'\d+).*multipv (?'Id'\d+).*((cp (?'Eval'-?\d+))|(mate (?'Mate'-?\d+))).*nps (?'NPS'\d+).*pv (?'PV'(([a-h][1-8][qrbk]?){2}\s?)+)", RegexOptions.Compiled);
 
         /// <summary>
         /// MultiPV id from engine
@@ -33,6 +33,12 @@ namespace StockFischer.Engine
         public double KNps { get; init; }
 
         /// <summary>
+        /// Number of moves to get mated, negative if engine is getting mated
+        /// positive otherwise.
+        /// </summary>
+        public int MateIn { get; set; }
+
+        /// <summary>
         /// Variation calculated
         /// </summary>
         public IEnumerable<EngineMove> Moves { get; init; }
@@ -40,10 +46,20 @@ namespace StockFischer.Engine
         public override string ToString()
         {
             StringBuilder sb = new();
-            string sign = Math.Sign(Evaluation) >= 0 ? "+" : string.Empty;
+            string eval = string.Empty;
 
-            return sb.Append(sign)
-                     .Append($"{Evaluation:N2} ")
+            if(MateIn == 0)
+            {
+                var sign = Math.Sign(Evaluation) >= 0 ? "+" : string.Empty;
+                eval = $"{sign}{Evaluation:N2} ";
+            }
+            else
+            {
+                var sign = Math.Sign(MateIn) >= 0 ? "+" : string.Empty;
+                eval = $"{sign}M{MateIn} ";
+            }
+
+            return sb.Append(eval)
                      .Append($"depth {Depth} ")
                      .Append(string.Join(", ", Moves))
                      .ToString();
@@ -58,11 +74,24 @@ namespace StockFischer.Engine
         {
             if (_pvRegex.Match(engineOutput) is Match { Success: true } m)
             {
-                int depth = int.Parse(m.Groups["Depth"].Value);
-                int eval = int.Parse(m.Groups["Eval"].Value);
-                int nps = int.Parse(m.Groups["NPS"].Value);
-                int id = int.Parse(m.Groups["Id"].Value);
-                string pv = m.Groups["PV"].Value;
+                var depth = int.Parse(m.Groups["Depth"].Value);
+                var eval = 0.0;
+                if(m.Groups["Eval"].Success)
+                {
+                    eval = int.Parse(m.Groups["Eval"].Value) / 100.0;
+                }
+
+
+                var nps = int.Parse(m.Groups["NPS"].Value);
+                var id = int.Parse(m.Groups["Id"].Value);
+                var pv = m.Groups["PV"].Value;
+                
+                int mate = 0;
+                if(m.Groups["Mate"].Success)
+                {
+                    mate = int.Parse(m.Groups["Mate"].Value);
+                    eval = mate > 0 ? double.PositiveInfinity : double.NegativeInfinity;
+                }
 
                 List<EngineMove> moves = new();
                 foreach (var move in pv.Split(" "))
@@ -91,9 +120,10 @@ namespace StockFischer.Engine
                 {
                     Id = id,
                     Depth = depth,
-                    Evaluation = eval / 100.0,
+                    Evaluation = eval,
                     KNps = nps / 1000.0,
-                    Moves = moves
+                    Moves = moves,
+                    MateIn = mate,
                 };
             }
 
