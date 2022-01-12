@@ -10,5 +10,6 @@
         <Border BorderBrush="Black" BorderThickness="1" Background="White" CornerRadius="3" x:Name="Bar">
             <Rectangle Fill="Black" VerticalAlignment="Top" Name="BlackBar"/>
         </Border>
+        <TextBlock FontWeight="Bold" Name="EvaluationText" HorizontalAlignment="Center" FontSize="10" Margin="0 5" Text="{Binding Evaluation, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:EvaluationBar}}"/>
     </Grid>
 </UserControl>

@@ -14,7 +14,7 @@ public class UCIEngine
     private const int MAX_TRIES = 200;
     private int _skillLevel;
     private readonly UCIEngineProcess _process;
-    private CancellationTokenSource _cts;
+    private string _currentFen;
 
     public event EventHandler<PotentialVariation> PotentialVariationCalculated; 
     
@@ -37,15 +37,21 @@ public class UCIEngine
     /// <param name="path"></param>
     /// <param name="depth"></param>
     /// <param name="settings"></param>
-    public UCIEngine(
-        string path,
-        int depth = 30,
-        UCIEngineSettings settings = null)
+    public UCIEngine(string path, int depth = 27, UCIEngineSettings settings = null)
     {
         Depth = depth;
         _process = new UCIEngineProcess(path);
         _process.Start();
-        _process.PotentialVariationCalculated += (_, e) => PotentialVariationCalculated?.Invoke(this, e);
+        _process.PotentialVariationCalculated += (_, e) =>
+        {
+            if(Fen.GetActiveColor(_currentFen) == Color.Black)
+            {
+                e.Evaluation.Score *= -1;
+                e.Evaluation.MateIn *= -1;
+            }
+
+            PotentialVariationCalculated?.Invoke(this, e);
+        };
 
         if (settings == null)
         {
@@ -141,6 +147,7 @@ public class UCIEngine
     {
         StartNewGame();
         Send($"position fen {fenPosition}");
+        _currentFen = fenPosition;
     }
 
 

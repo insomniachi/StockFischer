@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StockFischer.Engine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,19 +26,20 @@ namespace StockFischer
         private readonly Storyboard _storyBoard = new();
 
         public static readonly DependencyProperty EvaluationProperty =
-            DependencyProperty.Register("Evaluation", typeof(double), typeof(EvaluationBar), new PropertyMetadata(0.0, OnEvaluationChanged));
+            DependencyProperty.Register("Evaluation", typeof(Evaluation), typeof(EvaluationBar), new PropertyMetadata(null, OnEvaluationChanged));
 
         private static void OnEvaluationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var eb = d as EvaluationBar;
 
-            if(e.NewValue is double ev)
+            if(e.NewValue is Evaluation evaluation)
             {
                 var barHeight = eb.Bar.ActualHeight;
                 var blackBarHeight = barHeight / 2;
-                var offset = 0.0;
-
-                if(double.IsNegativeInfinity(ev))
+                var ev = evaluation.Score;
+                double offset;
+                
+                if (double.IsNegativeInfinity(ev))
                 {
                     offset = barHeight / 2;
                 }
@@ -50,13 +52,22 @@ namespace StockFischer
                     offset = blackBarHeight * -ev / 10;
                 }
 
-                var newHeight = blackBarHeight + offset;
+                if(ev >= 0)
+                {
+                    eb.EvaluationText.VerticalAlignment = VerticalAlignment.Bottom;
+                    eb.EvaluationText.Foreground = Brushes.Black;
+                }
+                else
+                {
+                    eb.EvaluationText.VerticalAlignment = VerticalAlignment.Top;
+                    eb.EvaluationText.Foreground = Brushes.White;
+                }
 
+
+                var newHeight = blackBarHeight + offset;
                 eb._animation.From = eb.BlackBar.ActualHeight;
                 eb._animation.To = newHeight;
-
                 eb._storyBoard.Begin(eb);
-
                 eb.BlackBar.Height = newHeight;
             }
         }

@@ -1,16 +1,12 @@
-﻿using StockFischer.Models.BoardElements.Pieces;
-using OpenPGN;
+﻿using OpenPGN;
 using OpenPGN.Models;
 using ReactiveUI;
+using StockFischer.Models.BoardElements.Pieces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using StockFischer.Services;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows;
 using UIColors = System.Windows.Media.Colors;
 
 namespace StockFischer.Models;

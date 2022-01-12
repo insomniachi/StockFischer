@@ -1,4 +1,5 @@
-﻿using OpenPGN;
+﻿using Microsoft.Extensions.Logging;
+using OpenPGN;
 using OpenPGN.Models;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -14,6 +15,8 @@ namespace StockFischer.ViewModels
 {
     public class MainWindowViewModel : ReactiveObject
     {
+        private readonly ILogger _logger;
+
         private UCIEngine _engine;
         private LiveBoard _board;
         public LiveBoard Board
@@ -31,17 +34,6 @@ namespace StockFischer.ViewModels
                 this.RaisePropertyChanged(nameof(Board));
 
                 ((INotifyPropertyChanged)_board.Moves).PropertyChanged += MainWindowViewModel_PropertyChanged;
-            }
-        }
-
-        private async void MainWindowViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if(e.PropertyName == "Current")
-            {
-                StopEngine();
-                _engine.SetFenPosition(Board.Moves.Current.Fen);
-                await Task.Delay(500);
-                _engine.Go();
             }
         }
 
@@ -89,6 +81,19 @@ namespace StockFischer.ViewModels
             _engine.PotentialVariationCalculated += OnPotentialVariationCalculated;
         }
 
+
+        private async void MainWindowViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Current")
+            {
+                StopEngine();
+                _engine.SetFenPosition(Board.Moves.Current.Fen);
+
+                await Task.Delay(500);
+                _engine.Go();
+            }
+        }
+
         /// <summary>
         /// Gets called by the engine regulary by the engine when it calculates a variation
         /// </summary>
@@ -96,13 +101,6 @@ namespace StockFischer.ViewModels
         /// <param name="e"></param>
         private void OnPotentialVariationCalculated(object sender, PotentialVariation e)
         {
-            // if engine is calculating blacks move, invert the evaluation
-            if(Board.ActiveColor == Color.Black)
-            {
-                e.Evaluation *= -1;
-                e.MateIn *= -1;
-            }
-
             var move = e.Moves.First();
 
             if (AutoPlayEnabled && e.Depth == 27)

@@ -1,16 +1,17 @@
-﻿<Window x:Class="StockFischer.MainWindow"
-                            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                            xmlns:local="clr-namespace:StockFischer"
-                            xmlns:vm="clr-namespace:StockFischer.ViewModels"
-                            mc:Ignorable="d"
-                            d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
-                            xmlns:fluent="urn:fluent-ribbon"
-                            xmlns:rx="http://reactiveui.net"
-                            Title="MainWindow" Height="950" Width="1150"
-                            PreviewKeyDown="MainWindow_OnKeyDown">
+﻿<fluent:RibbonWindow x:Class="StockFischer.MainWindow"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:local="clr-namespace:StockFischer"
+                     xmlns:vm="clr-namespace:StockFischer.ViewModels"
+                     mc:Ignorable="d"
+                     d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
+                     xmlns:fluent="urn:fluent-ribbon"
+                     xmlns:rx="http://reactiveui.net"
+                     xmlns:views="clr-namespace:StockFischer.Views"
+                     Title="MainWindow"
+                     PreviewKeyDown="MainWindow_OnKeyDown">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="150"/>
@@ -38,32 +39,8 @@
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
         </fluent:Ribbon>
-        
-        <Grid Grid.Row="1" Margin="0 10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="500"/>
-            </Grid.ColumnDefinitions>
 
-            <local:EvaluationBar Evaluation="{Binding EngineVariation.Evaluation}" Width="40" Margin="10 0"/>
+        <views:BoardWithMovesAndEvaluation Grid.Row="1" Margin="10 0 0 10"/>
 
-            <local:Board LiveBoard="{Binding Board}" 
-                         Perspective="{Binding Perspective}"
-                         Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" HorizontalAlignment="Left"
-                         Grid.Column="1"/>
-
-
-            <StackPanel Grid.Column="2" HorizontalAlignment="Left">
-                <local:MoveList Moves="{Binding Board.Moves, Mode=OneWay}" Height="500"/>
-                <TextBox Text="{Binding Board.BoardSetup,Mode=OneWay}" IsReadOnly="True"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox Text="{Binding InputFen, Mode=TwoWay}" Width="250"/>
-                    <Button Content="Load" Command="{Binding LoadFenCommand}"/>
-                </StackPanel>
-                <Button Content="Toggle" Command="{Binding TogglePerspectiveCommand}"/>
-                <TextBlock Text="{Binding EngineVariation}" TextWrapping="Wrap"/>
-            </StackPanel>
-        </Grid>
     </Grid>
-</Window>
+</fluent:RibbonWindow>

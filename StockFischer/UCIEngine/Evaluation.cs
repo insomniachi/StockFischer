@@ -1,17 +1,22 @@
-﻿namespace StockFischer.Services;
+﻿using System;
 
-public class Evaluation
+namespace StockFischer.Engine
 {
-    public string Type { get; set; }
-    public int Value { get; set; }
-
-    public Evaluation()
+    public class Evaluation
     {
-    }
+        public double Score { get; set; }
+        public int MateIn { get; set; }
 
-    public Evaluation(string type, int value)
-    {
-        Type = type;
-        Value = value;
+        public override string ToString()
+        {
+            if(MateIn != 0)
+            {
+                return $"{(Math.Sign(MateIn) > 0 ? "+" : "-" )}M{Math.Abs(MateIn)}";
+            }
+            else
+            {
+                return $"{(Math.Sign(Score) > 0 ? "+" : "-")}{Math.Abs(Score)}";
+            }
+        }
     }
 }

@@ -15,12 +15,11 @@ namespace StockFischer
         public MainWindow()
         {
             InitializeComponent();
-            DataContext =  ViewModel = new MainWindowViewModel();
+            DataContext =  ViewModel = new();
         }
 
         private void MainWindow_OnKeyDown(object sender, KeyEventArgs e)
         {
-            var vm = DataContext as MainWindowViewModel;
             switch (e.Key)
             {
                 case Key.Up:
