@@ -23,7 +23,8 @@ namespace OpenPGN
         None,
         Check,
         DoubleCheck,
-        CheckMate
+        Checkmate,
+        Stalemate
     }
 
     public static class BoardSetupExtensions
@@ -65,6 +66,7 @@ namespace OpenPGN
 
         }
 
+        // TODO : refactor IsAttackeBy/Along* functions
         private static AttackResult IsAttackByPawn(this BoardSetup boardSetup, Square target, Color attacker)
         {
             var result = new AttackResult();
@@ -77,8 +79,8 @@ namespace OpenPGN
 
             foreach (var move in moves.Where(x => x != Square.Invalid))
             {
-                if (boardSetup[move] is not {PieceType: PieceType.Pawn} p || p.Color != attacker) continue;
-                
+                if (boardSetup[move] is not { PieceType: PieceType.Pawn } p || p.Color != attacker) continue;
+
                 result.IsAttacked = true;
                 result.Attacks.Add(new Attack(move, p, boardSetup.IsSquarePinned(move, boardSetup.GetKingPosition(attacker), attacker.Invert())));
             }
@@ -92,8 +94,8 @@ namespace OpenPGN
 
             foreach (var move in GetKnightMoves(target))
             {
-                if (boardSetup[move] is not {PieceType: PieceType.Knight} p || p.Color != attacker) continue;
-                
+                if (boardSetup[move] is not { PieceType: PieceType.Knight } p || p.Color != attacker) continue;
+
                 result.IsAttacked = true;
                 result.Attacks.Add(new Attack(move, p, boardSetup.IsSquarePinned(move, boardSetup.GetKingPosition(attacker), attacker.Invert())));
             }
@@ -294,18 +296,17 @@ namespace OpenPGN
             return result;
         }
 
+        /// <summary>
+        /// Get the current game state (check/mate/stalemate)
+        /// </summary>
+        /// <param name="boardSetup"></param>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public static GameState GetGameState(this BoardSetup boardSetup, Color color)
         {
             var attacker = color.Invert();
-            var kingSquare = Square.Invalid;
-
-            foreach (var square in Square.AsEnumerable())
-            {
-                if (boardSetup[square] is not {PieceType: PieceType.King} p || p.Color != color) continue;
-                
-                kingSquare = square;
-                break;
-            }
+            var kingSquare = boardSetup.GetKingPosition(color);
 
             if (kingSquare == Square.Invalid)
             {
@@ -315,11 +316,13 @@ namespace OpenPGN
             var result = boardSetup.IsAttacked(kingSquare, attacker);
 
             // King is not attacked
-            if(!result)
+            if (!result)
             {
+                // TODO : check stalemate
                 return GameState.None;
             }
 
+            // Check if there are any unoccupied squares, or enemy pieces which are undefended
             var canKingMove = MoveTemplate.King.GetMoves(kingSquare)
                                                 .Where(x => boardSetup[x] is null || boardSetup[x] is { } p && p.Color == attacker)
                                                 .Any(x => !boardSetup.IsAttacked(x, attacker));
@@ -329,19 +332,21 @@ namespace OpenPGN
                 return result.Attacks.Count == 1 ? GameState.Check : GameState.DoubleCheck;
             }
 
-            // Can't defend more than 1 attack
-            if (result.Attacks.Count > 1)
+            // Can't defend against 2 attacks
+            // more than 2 attacks in legally not possible
+            if (result.Attacks.Count == 2)
             {
-                return GameState.CheckMate;
+                return GameState.Checkmate;
             }
 
             var attack = result.Attacks.Single();
 
+            // Check if we can capture attacker
             result = boardSetup.IsAttacked(attack.Square, color);
-            if(result)
+            if (result)
             {
                 // Can capture attacker
-                if(result.Attacks.Any(x => boardSetup.IsSquarePinned(x.Square, kingSquare, attacker) == false))
+                if (result.Attacks.Any(x => boardSetup.IsSquarePinned(x.Square, kingSquare, attacker) == false))
                 {
                     return GameState.Check;
                 }
@@ -349,12 +354,13 @@ namespace OpenPGN
 
             var squares = SquareExtensions.SquaresInBetween(kingSquare, attack.Square).ToList();
 
-            // attack from point blank range, can't block
-            if(!squares.Any())
+            // attack from point blank range or its a knight, can't block
+            if (!squares.Any())
             {
-                return GameState.CheckMate;
+                return GameState.Checkmate;
             }
 
+            // Check if we can block the attack
             foreach (var square in squares)
             {
                 result = boardSetup.IsAttacked(square, color);
@@ -366,16 +372,24 @@ namespace OpenPGN
                 }
             }
 
-            return GameState.CheckMate;
+            return GameState.Checkmate;
         }
 
+        /// <summary>
+        /// Check if square is pinned to another square.
+        /// </summary>
+        /// <param name="boardSetup"></param>
+        /// <param name="pinned"></param>
+        /// <param name="to"></param>
+        /// <param name="attacker"></param>
+        /// <returns></returns>
         public static bool IsSquarePinned(this BoardSetup boardSetup, Square pinned, Square to, Color attacker)
         {
             var squaresInBetween = SquareExtensions.SquaresInBetween(pinned, to).ToList();
             var squaresInLine = SquareExtensions.SquaresInLine(pinned, to).ToList();
 
             // squares are not in a straight line
-            if(!squaresInLine.Any())
+            if (!squaresInLine.Any())
             {
                 return false;
             }
@@ -391,7 +405,7 @@ namespace OpenPGN
             squaresExcept.Remove(to);
 
             // squares are at edges of the boards
-            if(!squaresExcept.Any())
+            if (!squaresExcept.Any())
             {
                 return false;
             }
@@ -399,7 +413,7 @@ namespace OpenPGN
             var attackSquares = Enumerable.Empty<Square>();
             Func<Piece, bool> condition = _ => false;
 
-            if(pinned.Rank == to.Rank)
+            if (pinned.Rank == to.Rank)
             {
                 // in horizontal/vertical line, we're pinned if the piece is queen/rook
                 condition = p => p.PieceType is PieceType.Rook or PieceType.Queen;
@@ -410,7 +424,7 @@ namespace OpenPGN
                         .OrderBy(x => x.File);
 
             }
-            else if(pinned.File == to.File)
+            else if (pinned.File == to.File)
             {
                 // in horizontal/vertical line, we're pinned if the piece is queen/rook
                 condition = p => p.PieceType is PieceType.Rook or PieceType.Queen;
@@ -418,7 +432,7 @@ namespace OpenPGN
                     ? SquareExtensions.SquaresInBetween(squaresExcept.MinBy(x => x.Rank)!, pinned, true).OrderByDescending(x => x.Rank)
                     : SquareExtensions.SquaresInBetween(squaresExcept.MaxBy(x => x.Rank)!, pinned, true).OrderBy(x => x.Rank);
             }
-            else if(Math.Abs(pinned.File - to.File) == Math.Abs(pinned.Rank - to.Rank))
+            else if (Math.Abs(pinned.File - to.File) == Math.Abs(pinned.Rank - to.Rank))
             {
                 // in diagonal line, we're pinned if the piece is queen/bishop
                 condition = p => p.PieceType is PieceType.Bishop or PieceType.Queen;
@@ -433,7 +447,7 @@ namespace OpenPGN
             foreach (var square in attackSquares)
             {
                 if (boardSetup[square] is not { } p) continue;
-                
+
                 // 1. There is another piece shielding from pins 
                 // 2. if the squares are in horizontal/vertical line, we're pinned if the piece is queen/rook
                 //    if the squares are in diagonal line, we're pinned if the piece is queen/bishop
@@ -444,13 +458,20 @@ namespace OpenPGN
             return false;
         }
 
+        /// <summary>
+        /// Get kings square
+        /// </summary>
+        /// <param name="boardSetup"></param>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public static Square GetKingPosition(this BoardSetup boardSetup, Color color)
         {
             var kingSquare = Square.Invalid;
 
             foreach (var square in Square.AsEnumerable())
             {
-                if (boardSetup[square] is not {PieceType: PieceType.King} p || p.Color != color) continue;
+                if (boardSetup[square] is not { PieceType: PieceType.King } p || p.Color != color) continue;
                 kingSquare = square;
                 break;
             }
@@ -463,9 +484,26 @@ namespace OpenPGN
             return kingSquare;
         }
 
+        /// <summary>
+        /// Invert color.
+        /// </summary>
+        /// <param name="color"></param>
+        /// <returns></returns>
         public static Color Invert(this Color color)
         {
             return color == Color.White ? Color.Black : Color.White;
+        }
+
+        /// <summary>
+        /// Get Active color from fen
+        /// </summary>
+        /// <param name="fen"></param>
+        /// <returns></returns>
+        public static Color GetActiveColor(string fen)
+        {
+            var parts = fen.Split(' ');
+
+            return parts[1] == "w" ? Color.White : Color.Black;
         }
     }
 }

@@ -44,7 +44,7 @@ namespace StockFischer.ViewModels
         public bool IsPromoting { get; set; }
 
         [Reactive]
-        public PotentialVariation EngineVariation { get; set; }
+        public PotentialVariationModel EngineVariation { get; set; }
 
         public string InputFen { get; set; }
         public bool AutoPlayEnabled { get; set; }
@@ -99,17 +99,21 @@ namespace StockFischer.ViewModels
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnPotentialVariationCalculated(object sender, PotentialVariation e)
+        private async void OnPotentialVariationCalculated(object sender, PotentialVariation e)
         {
-            var move = e.Moves.First();
+            var moves = e.Moves.ToList();
+            EngineVariation = new(Board.Moves.Current?.Fen ?? BoardSetup.StartingPosition, e);
 
             if (AutoPlayEnabled && e.Depth == 27)
             {
                 StopEngine();
-                Application.Current.Dispatcher.Invoke(() => Board.TryMove(move.OriginSquare, move.TargetSquare)); 
-            }
 
-            EngineVariation = e;
+                await Task.Delay(100);
+
+                var move = moves.First();
+
+                Application.Current.Dispatcher.Invoke(() => Board.TryMakeMove(move.From, move.To));
+            }
         }
 
         /// <summary>

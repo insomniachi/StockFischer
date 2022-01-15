@@ -5,13 +5,13 @@ namespace StockFischer.Engine
 {
     public class EngineMove
     {
-        public Square OriginSquare { get; set; }
-        public Square TargetSquare { get; set; }
+        public Square From { get; set; }
+        public Square To { get; set; }
         public PieceType? PromotedPiece { get; set; }
 
         public override string ToString()
         {
-            return $"{OriginSquare}{TargetSquare}{PromotedPiece}";
+            return $"{From}{To}{PromotedPiece}";
         }
 
         private static string PieceToString(PieceType? p)

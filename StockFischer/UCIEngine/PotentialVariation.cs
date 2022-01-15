@@ -1,5 +1,4 @@
 ﻿using OpenPGN.Models;
-using StockFischer.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -36,8 +35,6 @@ public class PotentialVariation
     /// Variation calculated
     /// </summary>
     public IEnumerable<EngineMove> Moves { get; init; }
-
-    public IEnumerable<MoveModel> LiveBoardMoves { get; set; }
 
     public override string ToString()
     {
@@ -93,8 +90,8 @@ public class PotentialVariation
 
                 moves.Add(new EngineMove
                 {
-                    OriginSquare = origin,
-                    TargetSquare = target,
+                    From = origin,
+                    To = target,
                     PromotedPiece = promotedPiece,
                 });
             }
@@ -125,36 +122,5 @@ public class PotentialVariation
             'k' => PieceType.King,
             _ => throw new ArgumentException(null, nameof(piece))
         };
-    }
-}
-
-public static class Fen
-{
-    public static Color GetActiveColor(string fen)
-    {
-        var parts = fen.Split(' ');
-
-        return parts[1] == "w" ? Color.White : Color.Black;
-    }
-
-    public static IEnumerable<MoveModel> GetLiveBoardMoves(string fen, IEnumerable<EngineMove> moves)
-    {
-        var board = LiveBoard.FromFen(fen);
-
-        foreach (var move in moves)
-        {
-            board.TryMove(move.OriginSquare, move.TargetSquare);
-        }
-        
-        board.GoToStart();
-
-        var result = new List<MoveModel> { board.Moves.Current };
-
-        while(board.GoForward())
-        {
-            result.Add(board.Moves.Current);
-        }
-
-        return result;
     }
 }

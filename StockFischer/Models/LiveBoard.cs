@@ -1,6 +1,7 @@
 ﻿using OpenPGN;
 using OpenPGN.Models;
 using ReactiveUI;
+using StockFischer.Engine;
 using StockFischer.Models.BoardElements.Pieces;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,9 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     public BoardSetup BoardSetup { get; private set; }
 
+    /// <summary>
+    /// All the moves played in the game
+    /// </summary>
     public MoveCollection Moves { get; } = new();
 
     /// <summary>
@@ -113,6 +117,10 @@ public class LiveBoard : ReactiveObject
         this.RaisePropertyChanged(nameof(BoardSetup));
     }
 
+    /// <summary>
+    /// Update UI if there are checks in the current position, only used when loading position from fen
+    /// </summary>
+    /// <param name="color"></param>
     private void UpdateCheckElements(Color color)
     {
         var king = GetKing(color);
@@ -121,7 +129,7 @@ public class LiveBoard : ReactiveObject
             Elements.Add(new Check(king.Square));
         else if (BoardSetup.GetGameState(ActiveColor) == GameState.DoubleCheck)
             Elements.Add(new Check(king.Square));
-        else if (BoardSetup.GetGameState(ActiveColor) == GameState.CheckMate)
+        else if (BoardSetup.GetGameState(ActiveColor) == GameState.Checkmate)
             Elements.Add(new Checkmate(king.Square));
     }
 
@@ -153,6 +161,41 @@ public class LiveBoard : ReactiveObject
     public static LiveBoard NewGame() => new();
 
     /// <summary>
+    /// Convert moves in Long Algebraic notation to Algebraic notation.
+    /// For this we need to create a brand new board, and play the moves.
+    /// </summary>
+    /// <param name="startpos"></param>
+    /// <param name="moves"></param>
+    /// <returns></returns>
+    public static IEnumerable<MoveModel> ConvertMovesToAlgebraic(string startpos, IEnumerable<EngineMove> moves)
+    {
+        var board = FromFen(startpos);
+
+        foreach (var move in moves)
+        {
+            board.TryMakeMove(move.From, move.To);
+        }
+
+        return board.GetMovesPlayed();
+    }
+
+    /// <summary>
+    /// Get all the moves played as plys.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<MoveModel> GetMovesPlayed()
+    {
+        foreach (var move in Moves)
+        {
+            if(move.White is { })
+                yield return move.White;
+
+            if (move.Black is { })
+                yield return move.Black;
+        }
+    }
+
+    /// <summary>
     /// Create an instance from a pgn file
     /// </summary>
     /// <param name="file"></param>
@@ -180,23 +223,37 @@ public class LiveBoard : ReactiveObject
         return board;
     }
 
+    /// <summary>
+    /// Set the board position before <paramref name="move"/> was played
+    /// <paramref name="move"/> should be inside <see cref="Moves"/>
+    /// </summary>
+    /// <param name="move">move</param>
     public void GoToMove(MoveModel move)
     {
         Load(BoardSetup.FromFen(move.Fen));
     }
 
+    /// <summary>
+    /// Go to starting position of the game
+    /// </summary>
     public void GoToStart()
     {
         if (!Moves.GoToStart()) return;
         GoToMove(Moves.Current);
     }
 
+    /// <summary>
+    /// Go to the final position of the game.
+    /// </summary>
     public void GoToEnd()
     {
         if (!Moves.GoToEnd()) return;
         GoToMove(Moves.Current);
     }
 
+    /// <summary>
+    /// Undo the current move.
+    /// </summary>
     public void GoBack()
     {
         var model = Moves.Current;
@@ -251,6 +308,10 @@ public class LiveBoard : ReactiveObject
         UpdateCheckElements(model.Color.Invert());
     }
 
+    /// <summary>
+    /// Redo the last undone move.
+    /// </summary>
+    /// <returns></returns>
     public bool GoForward()
     {
         if (Moves.GoForward() == false) return false;
@@ -260,6 +321,10 @@ public class LiveBoard : ReactiveObject
         return true;
     }
 
+    /// <summary>
+    /// Highlight a square
+    /// </summary>
+    /// <param name="square"></param>
     public void OnHighlightSquareSelected(Square square)
     {
         if (GetElements<SquareHighlight2>().SingleOrDefault(x => x.Square == square) is { } highlight)
@@ -270,6 +335,8 @@ public class LiveBoard : ReactiveObject
         {
             Elements.Add(new SquareHighlight2(square) { Color = UIColors.DarkRed });
         }
+
+        // TODO : implement arrows.
     }
 
     /// <summary>
@@ -278,8 +345,10 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     /// <param name="square">Square on which user clicked</param>
     /// <returns>Returns whether this user interaction cased a move to happen</returns>
-    public bool OnMoveOriginSquareSelected(Square square)
+    public bool TryMakeMove(Square square)
     {
+        MoveModel moveModel = null;
+
         if (SelectedPiece is null)
         {
             // if the there is a piece on the clicked square, which is the same color as active player
@@ -316,12 +385,12 @@ public class LiveBoard : ReactiveObject
                 if (SelectedPiece.Type == PieceType.Pawn && square.Rank is 1 or 8)
                 {
                     // TODO : need to give choice on promoted piece
-                    Promote(SelectedPiece, square, PieceType.Queen, true);
+                    moveModel = Promote(SelectedPiece, square, PieceType.Queen, true);
                 }
                 // Otherwise it's a simple capture.
                 else
                 {
-                    Capture(SelectedPiece, square);
+                    moveModel = Capture(SelectedPiece, square);
                 }
             }
             // Otherwise it's not a capture
@@ -340,28 +409,30 @@ public class LiveBoard : ReactiveObject
                     (square == king.KingSideCastleSquare || square == king.QueenSideCastleSquare))
                 {
                     BoardSetup.EnPassantSquare = null;
-                    Castle(SelectedPiece, square);
+                    moveModel = Castle(SelectedPiece, square);
                 }
                 // Check if it's an En passant (https://en.wikipedia.org/wiki/En_passant).
                 else if (SelectedPiece.Type == PieceType.Pawn &&
                          BoardSetup.EnPassantSquare == square)
                 {
-                    CaptureEnPassant(SelectedPiece, square);
+                    moveModel = CaptureEnPassant(SelectedPiece, square);
                     BoardSetup.EnPassantSquare = null;
                 }
                 // Check if it's a promotion (https://en.wikipedia.org/wiki/Promotion_(chess)).
                 else if (SelectedPiece.Type == PieceType.Pawn && square.Rank is 1 or 8)
                 {
                     BoardSetup.EnPassantSquare = null;
-                    Promote(SelectedPiece, square);
+                    moveModel = Promote(SelectedPiece, square);
                 }
                 // Otherwise move the piece to the square
                 else
                 {
                     BoardSetup.EnPassantSquare = null;
-                    SimpleMove(SelectedPiece, square);
+                    moveModel = SimpleMove(SelectedPiece, square);
                 }
             }
+
+            OnMovePlayed(moveModel);
 
             return true;
         }
@@ -373,7 +444,7 @@ public class LiveBoard : ReactiveObject
     /// <param name="from">origin square of piece to move.</param>
     /// <param name="to">target square of piece to move.</param>
     /// <returns>whether a move was made successfully.</returns>
-    public bool TryMove(Square from, Square to)
+    public bool TryMakeMove(Square from, Square to)
     {
         if (from == null || to == null) return false;
 
@@ -381,7 +452,7 @@ public class LiveBoard : ReactiveObject
 
         SelectedPiece = GetElements<LivePiece>().Single(x => x.Square == from);
 
-        return OnMoveOriginSquareSelected(to);
+        return TryMakeMove(to);
     }
 
     /// <summary>
@@ -389,7 +460,7 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     /// <param name="piece">Piece to move</param>
     /// <param name="square">Target square</param>
-    private void SimpleMove(LivePiece piece, Square square)
+    private MoveModel SimpleMove(LivePiece piece, Square square)
     {
         var move = new Move
         {
@@ -403,12 +474,12 @@ public class LiveBoard : ReactiveObject
             move.Type = MoveType.DoublePawnMove;
         }
 
-        OnMovePlayed(new MoveModel(move)
+        return new MoveModel(move)
         {
             LivePiece = piece,
             TargetSquare = square,
             OriginSquare = piece.Square
-        });
+        };
     }
 
 
@@ -419,7 +490,7 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     /// <param name="piece"></param>
     /// <param name="square"></param>
-    private void Capture(LivePiece piece, Square square)
+    private MoveModel Capture(LivePiece piece, Square square)
     {
         var move = new Move
         {
@@ -433,13 +504,13 @@ public class LiveBoard : ReactiveObject
             move.OriginFile = piece.Square.File;
         }
 
-        OnMovePlayed(new MoveModel(move)
+        return new MoveModel(move)
         {
             LivePiece = piece,
             TargetSquare = square,
             OriginSquare = piece.Square,
             CapturedPiece = GetElement<LivePiece>(x => x.Square == square)
-        });
+        };
     }
 
     /// <summary>
@@ -447,7 +518,7 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     /// <param name="piece"></param>
     /// <param name="square"></param>
-    private void CaptureEnPassant(LivePiece piece, Square square)
+    private MoveModel CaptureEnPassant(LivePiece piece, Square square)
     {
         var move = new Move
         {
@@ -457,13 +528,13 @@ public class LiveBoard : ReactiveObject
             OriginFile = piece.Square.File
         };
 
-        OnMovePlayed(new MoveModel(move)
+        return new MoveModel(move)
         {
             LivePiece = piece,
             TargetSquare = square,
             OriginSquare = piece.Square,
             CapturedPiece = GetElement<LivePiece>(x => x.Square == square)
-        });
+        };
     }
 
     /// <summary>
@@ -473,7 +544,7 @@ public class LiveBoard : ReactiveObject
     /// <param name="square">target square</param>
     /// <param name="type">promoted piece type</param>
     /// <param name="isCapture">If there was a capture to reach the promotion square</param>
-    private void Promote(LivePiece piece, Square square, PieceType type = PieceType.Queen, bool isCapture = false)
+    private MoveModel Promote(LivePiece piece, Square square, PieceType type = PieceType.Queen, bool isCapture = false)
     {
         var move = new Move
         {
@@ -484,13 +555,13 @@ public class LiveBoard : ReactiveObject
             OriginFile = piece.Square.File,
         };
 
-        OnMovePlayed(new MoveModel(move)
+        return new MoveModel(move)
         {
             LivePiece = piece,
             TargetSquare = square,
             OriginSquare = piece.Square,
             CapturedPiece = move.Type == MoveType.Capture ? GetElement<LivePiece>(x => x.Square == square) : null
-        });
+        };
     }
 
     /// <summary>
@@ -498,7 +569,7 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     /// <param name="piece">King</param>
     /// <param name="square">G1/C1 if white, G8/C8 if black</param>
-    private void Castle(LivePiece piece, Square square)
+    private MoveModel Castle(LivePiece piece, Square square)
     {
         var type = (square == Square.G1 || square == Square.G8)
             ? MoveType.CastleKingSide
@@ -510,12 +581,12 @@ public class LiveBoard : ReactiveObject
             Type = type
         };
 
-        OnMovePlayed(new MoveModel(move)
+        return new MoveModel(move)
         {
             LivePiece = piece,
             TargetSquare = square,
             OriginSquare = piece.Square
-        });
+        };
     }
 
     /// <summary>
@@ -671,7 +742,12 @@ public class LiveBoard : ReactiveObject
         var prevSuggestions = Elements.OfType<T>().ToList();
         prevSuggestions.ForEach(x => Elements.Remove(x));
     }
-
+    
+    /// <summary>
+    /// Remove all the lements of given type statifying the predicate
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="condition"></param>
     private void Clear<T>(Func<T, bool> condition)
         where T : ILiveBoardElement
     {
@@ -686,7 +762,7 @@ public class LiveBoard : ReactiveObject
     /// Validate game state (check, checkmate etc)
     /// </summary>
     /// <param name="move"></param>
-    private void OnMovePlayed(MoveModel move, bool isRewinding = false)
+    public void OnMovePlayed(MoveModel move, bool isRewinding = false)
     {
         Clear<Check>();
 
@@ -743,7 +819,7 @@ public class LiveBoard : ReactiveObject
                 moveModel.Move.IsDoubleCheck = true;
                 Elements.Add(new Check(king.Square));
                 break;
-            case GameState.CheckMate:
+            case GameState.Checkmate:
                 moveModel.Move.IsCheckMate = true;
                 Elements.Add(new Checkmate(king.Square));
                 break;

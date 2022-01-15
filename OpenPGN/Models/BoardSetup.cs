@@ -9,6 +9,7 @@ namespace OpenPGN.Models;
 /// </summary>
 public class BoardSetup
 {
+    public const string StartingPosition = @"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     private readonly Piece[,] _board = new Piece[8, 8];
 
     /// <summary>
@@ -207,7 +208,7 @@ public class BoardSetup
         return new Piece(type, color);
     }
 
-    public static BoardSetup NewGame() => FromFen(@"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static BoardSetup NewGame() => FromFen(StartingPosition);
 
     public static BoardSetup FromFen(string fen)
     {

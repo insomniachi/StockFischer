@@ -44,12 +44,6 @@ public class UCIEngine
         _process.Start();
         _process.PotentialVariationCalculated += (_, e) =>
         {
-            if(Fen.GetActiveColor(_currentFen) == Color.Black)
-            {
-                e.Evaluation.Score *= -1;
-                e.Evaluation.MateIn *= -1;
-            }
-
             PotentialVariationCalculated?.Invoke(this, e);
         };
 
@@ -137,6 +131,8 @@ public class UCIEngine
         {
             Send($"position startpos moves {MovesToString(moves)}");
         }
+
+        _currentFen = BoardSetup.StartingPosition;
     }
 
     /// <summary>

@@ -29,7 +29,7 @@
                     <Button Content="Load" Command="{Binding LoadFenCommand}"/>
                     <Button Content="Toggle" Command="{Binding TogglePerspectiveCommand}"/>
                 </StackPanel>
-                <TextBlock Text="{Binding EngineVariation}" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding EngineVariation}" TextWrapping="Wrap" FontSize="18"/>
             </StackPanel>
         </Border>
 

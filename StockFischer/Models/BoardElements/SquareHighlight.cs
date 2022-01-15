@@ -25,6 +25,9 @@ namespace StockFischer.Models
 
     }
 
+    /// <summary>
+    /// TODO : find a better name
+    /// </summary>
     public class SquareHighlight2 : SquareHighlight
     {
         public SquareHighlight2(Square square) : base(square) { }

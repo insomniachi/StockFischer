@@ -1,8 +1,7 @@
-﻿using StockFischer.Models.BoardElements.Pieces;
-using OpenPGN;
+﻿using OpenPGN;
 using OpenPGN.Models;
-using OpenPGN.Utils;
 using ReactiveUI;
+using StockFischer.Models.BoardElements.Pieces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,6 +25,11 @@ namespace StockFischer.Models
             Color = piece.Color;
             Square = square;
             Image = $"pack://application:,,,/StockFischer;component/Assets/Themes/Default/{piece.Color.ToString().ToLower()}_{piece.PieceType.ToString().ToLower()}.png";
+        }
+
+        public override string ToString()
+        {
+            return $"{Glyph}({Square})";
         }
 
         public static LivePiece GetPiece(Piece piece, Square square)
@@ -76,7 +80,8 @@ namespace StockFischer.Models
             switch(boardSetup.GetGameState(Color))
             {
                 case GameState.DoubleCheck:
-                case GameState.CheckMate:
+                case GameState.Checkmate:
+                case GameState.Stalemate:
                     return Enumerable.Empty<Square>();
                 case GameState.Check:
                     Attack attack = boardSetup.IsAttacked(king, Color.Invert()).Attacks.Single();
