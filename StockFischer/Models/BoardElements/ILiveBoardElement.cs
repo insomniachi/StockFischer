@@ -1,9 +1,8 @@
 ﻿using OpenPGN.Models;
 
-namespace StockFischer.Models
+namespace StockFischer.Models;
+
+public interface ILiveBoardElement
 {
-    public interface ILiveBoardElement
-    {
-        Square Square { get;}
-    }
+    Square Square { get; }
 }

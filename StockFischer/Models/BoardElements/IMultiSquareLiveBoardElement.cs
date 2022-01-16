@@ -1,8 +1,7 @@
-﻿namespace StockFischer.Models
+﻿namespace StockFischer.Models;
+
+public interface IMultiSquareLiveBoardElement : ILiveBoardElement
 {
-    public interface IMultiSquareLiveBoardElement : ILiveBoardElement
-    {
-        int Height { get; }
-        int Width { get; }
-    }
+    int Height { get; }
+    int Width { get; }
 }

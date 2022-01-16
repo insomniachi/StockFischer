@@ -8,22 +8,13 @@
     <RootNamespace>StockFischer</RootNamespace>
     <StartupObject>StockFischer.App</StartupObject>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Assets\chess-game.png" />
-    <None Remove="Assets\idea.png" />
-    <None Remove="Assets\knight.png" />
-    <None Remove="Assets\move.png" />
-    <None Remove="Assets\stop.png" />
-  </ItemGroup>
-
   
   <ItemGroup>
-    <PackageReference Include="DataContainer.NET" Version="1.1.5" />
     <PackageReference Include="Fluent.Ribbon" Version="9.0.1" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="ReactiveUI.Events.WPF" Version="15.1.1" />
     <PackageReference Include="ReactiveUI.Fody" Version="17.1.17" />
     <PackageReference Include="ReactiveUI.WPF" Version="17.1.17" />

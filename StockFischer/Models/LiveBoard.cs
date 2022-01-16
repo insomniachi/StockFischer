@@ -1,6 +1,7 @@
 ﻿using OpenPGN;
 using OpenPGN.Models;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using StockFischer.Engine;
 using StockFischer.Models.BoardElements.Pieces;
 using System;
@@ -19,7 +20,9 @@ namespace StockFischer.Models;
 /// </summary>
 public class LiveBoard : ReactiveObject
 {
-    private LivePiece _selectedPiece;
+
+    public event EventHandler<MoveModel> MovePlayed;
+    private void RaiseMovePlayed(MoveModel move) => MovePlayed?.Invoke(this, move);
 
     /// <summary>
     /// Stores the current state of the board, ie the location of all pieces
@@ -50,36 +53,14 @@ public class LiveBoard : ReactiveObject
     /// Selected Piece, Updated when active player clicks one of his pieces
     /// Needed when used with UI
     /// </summary>
-    private LivePiece SelectedPiece
-    {
-        get => _selectedPiece;
-        set
-        {
-            if (_selectedPiece == value)
-            {
-                return;
-            }
-
-            _selectedPiece = value;
-
-            if (_selectedPiece is null)
-            {
-                Clear<SquareHighlight>();
-            }
-            else
-            {
-                AddLegalMovesHint(_selectedPiece);
-            }
-        }
-    }
-
+    [Reactive]
+    private LivePiece SelectedPiece { get; set; }
+    
     /// <summary>
     /// Default constructor
     /// Initializes <see cref="BoardSetup"/> with starting position
     /// </summary>
-    private LiveBoard() : this(BoardSetup.NewGame())
-    {
-    }
+    private LiveBoard() : this(BoardSetup.NewGame()) { }
 
     /// <summary>
     /// Constructor to initialize board with a custom position
@@ -88,6 +69,19 @@ public class LiveBoard : ReactiveObject
     private LiveBoard(BoardSetup boardSetup)
     {
         Load(boardSetup);
+
+        this.WhenAnyValue(x => x.SelectedPiece)
+            .Subscribe(p =>
+            {
+                if(p is null)
+                {
+                    Clear<SquareHighlight>();
+                }
+                else
+                {
+                    AddLegalMovesHint(p);
+                }
+            });
     }
 
     /// <summary>
@@ -202,6 +196,11 @@ public class LiveBoard : ReactiveObject
     /// <returns></returns>
     public static LiveBoard FromPgnFile(string file) => FromGame(Game.FromPgnFile(file));
 
+    /// <summary>
+    /// Creates an instance from <see cref="Game"/>
+    /// </summary>
+    /// <param name="game"></param>
+    /// <returns></returns>
     public static LiveBoard FromGame(Game game)
     {
         var board = NewGame();
@@ -604,14 +603,14 @@ public class LiveBoard : ReactiveObject
 
         Clear<SquareHighlight>();
 
-        var candidates = piece.GetLegalMoves(BoardSetup);
-
-        foreach (var candidate in candidates)
-        {
-            Elements.Add(BoardSetup[candidate] is not null
-                ? new SquareHighlight2(candidate)
-                : new SquareHighlight(candidate));
-        }
+        piece.GetLegalMoves(BoardSetup)
+             .ToList()
+             .ForEach(x => 
+             {
+                 Elements.Add(BoardSetup[x] is not null
+                    ? new SquareHighlight2(x)
+                    : new SquareHighlight(x));
+             });
     }
 
     /// <summary>
@@ -682,8 +681,7 @@ public class LiveBoard : ReactiveObject
                 break;
             case MoveType.CaptureEnPassant:
                 var captureSquare = moveModel.TargetSquare.Down(piece.Color);
-                var capturedPiece = Elements.OfType<LivePiece>().Single(x => x.Square == captureSquare);
-                Elements.Remove(capturedPiece);
+                Clear<LivePiece>(x => x.Square == captureSquare);
                 break;
             case MoveType.CastleKingSide when color == Color.White:
                 GetElement<Rook>(x => x.Square == Square.H1).Move(Square.F1);
@@ -776,6 +774,8 @@ public class LiveBoard : ReactiveObject
         UpdateMoveOnBoard(move);
 
         UpdateGameState(move);
+
+        RaiseMovePlayed(move);
 
         if (isRewinding == false)
         {
@@ -956,8 +956,8 @@ public class LiveBoard : ReactiveObject
 
         var piece = moveModel.LivePiece;
 
-        var otherPieces = Elements.OfType<LivePiece>().Where(x =>
-            x.Type == piece.Type && x.Color == piece.Color && x.Square != piece.Square);
+        var otherPieces = GetElements<LivePiece>().Where(x => x.Type == piece.Type && x.Color == piece.Color && x.Square != piece.Square);
+        
         foreach (var otherPiece in otherPieces)
         {
             if (!otherPiece.GetLegalMoves(BoardSetup).Contains(moveModel.Move.TargetSquare)) continue;
@@ -976,10 +976,9 @@ public class LiveBoard : ReactiveObject
             }
         }
 
-        if (moveModel.Move.OriginRank is not null && moveModel.Move.OriginFile is not null)
+        if (moveModel.Move.OriginRank is int rank && moveModel.Move.OriginFile is File file)
         {
-            moveModel.Move.OriginSquare =
-                Square.New(moveModel.Move.OriginFile.Value, moveModel.Move.OriginRank.Value);
+            moveModel.Move.OriginSquare = Square.New(file, rank);
         }
     }
 

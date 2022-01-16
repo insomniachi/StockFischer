@@ -12,69 +12,67 @@ using System.Configuration;
 using System.IO;
 using System.Windows;
 
-namespace StockFischer
+namespace StockFischer;
+
+/// <summary>
+/// Interaction logic for App.xaml
+/// </summary>
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    private readonly IHost _host;
+    public static IServiceProvider Services { get; private set; }
+
+    public App()
     {
-        private readonly IHost _host;
-        public static IServiceProvider Services { get; private set; }   
+        _host = Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration(config =>
+            {
+                config.SetBasePath(Directory.GetCurrentDirectory())
+                      .AddJsonFile("appsettings.json");
+            })
+            .ConfigureServices(services =>
+            {
+                services.UseMicrosoftDependencyResolver();
+                var resolver = Locator.CurrentMutable;
+                resolver.InitializeSplat();
+                resolver.InitializeReactiveUI();
+                ConfigureServices(services);
+            })
+            .ConfigureLogging(logging => logging.AddConsole())
+            .Build();
 
-        public App()
-        {
-            _host = Host.CreateDefaultBuilder()
-                .ConfigureAppConfiguration(config => 
-                {
-                    config.SetBasePath(Directory.GetCurrentDirectory())
-                          .AddJsonFile("appsettings.json");
-                })
-                .ConfigureServices(services => 
-                {
-                    services.UseMicrosoftDependencyResolver();
-                    var resolver = Locator.CurrentMutable;
-                    resolver.InitializeSplat();
-                    resolver.InitializeReactiveUI();
-                    ConfigureServices(services);
-                })
-                .ConfigureLogging(logging =>  logging.AddConsole())
-                .Build();
+        Services = _host.Services;
+        Services.UseMicrosoftDependencyResolver();
+    }
 
-            Services = _host.Services;
-            Services.UseMicrosoftDependencyResolver();
-        }
+    private void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<AppSettings>();
+        services.AddTransient<IViewService, ViewService>();
+        services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<IScreen, MainWindowViewModel>(x => x.GetRequiredService<MainWindowViewModel>());
+        services.AddTransient<LiveBoardViewModel>();
+        services.AddTransient<MainWindow>();
 
-        private void ConfigureServices(IServiceCollection services)
-        {
-            services.AddSingleton<IDataContainer>(new DataContainer());
-            services.AddTransient<AppSettings>();
-            services.AddTransient<IViewService, ViewService>();
-            services.AddSingleton<MainWindowViewModel>();
-            services.AddSingleton<IScreen, MainWindowViewModel>(x => x.GetRequiredService<MainWindowViewModel>());
-            services.AddTransient<LiveBoardViewModel>();
-            services.AddTransient<MainWindow>();
-
-            //Routing
-            services.AddTransient<IViewFor<LiveBoardViewModel>, BoardWithMovesAndEvaluation>();
-        }
+        //Routing
+        services.AddTransient<IViewFor<LiveBoardViewModel>, BoardWithMovesAndEvaluation>();
+    }
 
 
-        protected async override void OnStartup(StartupEventArgs e)
-        {
-            await _host.StartAsync();
+    protected async override void OnStartup(StartupEventArgs e)
+    {
+        await _host.StartAsync();
 
-            var window = Services.GetRequiredService<MainWindow>();
-            window.Show();
+        var window = Services.GetRequiredService<MainWindow>();
+        window.Show();
 
-            base.OnStartup(e);
-        }
+        base.OnStartup(e);
+    }
 
-        protected override void OnExit(ExitEventArgs e)
-        {
-            _host.StopAsync();
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _host.StopAsync();
 
-            base.OnExit(e);
-        }
+        base.OnExit(e);
     }
 }

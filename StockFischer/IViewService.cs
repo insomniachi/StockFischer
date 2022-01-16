@@ -1,26 +1,24 @@
 ﻿using OpenPGN.Models;
-using StockFischer.Models;
 
-namespace StockFischer
+namespace StockFischer;
+
+public interface IViewService
 {
-    public interface IViewService
+    void EditEngines();
+    Game OpenPgn();
+}
+
+public class ViewService : IViewService
+{
+    public void EditEngines()
     {
-        void EditEngines();
-        Game OpenPgn();
+        throw new System.NotImplementedException();
     }
 
-    public class ViewService : IViewService
+    public Game OpenPgn()
     {
-        public void EditEngines()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Game OpenPgn()
-        {
-            Microsoft.Win32.OpenFileDialog dialog = new();
-            _ = dialog.ShowDialog();
-            return Game.FromPgnFile(dialog.FileName);
-        }
+        Microsoft.Win32.OpenFileDialog dialog = new();
+        _ = dialog.ShowDialog();
+        return Game.FromPgnFile(dialog.FileName);
     }
 }

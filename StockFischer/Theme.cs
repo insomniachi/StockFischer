@@ -1,21 +1,20 @@
 ﻿using System.Drawing;
 
-namespace StockFischer
+namespace StockFischer;
+
+public static class ThemeHelper
 {
-    public static class ThemeHelper
-    {
-        public static ThemeInfo Theme { get; set; } = new ThemeInfo { Name = StockFischer.Theme.Default };
-    }
+    public static ThemeInfo Theme { get; set; } = new ThemeInfo { Name = StockFischer.Theme.Default };
+}
 
-    public class ThemeInfo
-    {
-        public Theme Name { get; set; }
-        public static Brush WhiteSquare { get; set; } = Brushes.Tan;
-        public static Brush BlackSquare { get; set; } = Brushes.Brown;
-    }
+public class ThemeInfo
+{
+    public Theme Name { get; set; }
+    public static Brush WhiteSquare { get; set; } = Brushes.Tan;
+    public static Brush BlackSquare { get; set; } = Brushes.Brown;
+}
 
-    public enum Theme
-    {
-        Default,
-    }
+public enum Theme
+{
+    Default,
 }

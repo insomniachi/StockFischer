@@ -12,16 +12,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace StockFischer.Dialogs
+namespace StockFischer.Dialogs;
+
+/// <summary>
+/// Interaction logic for EditEnginesWindow.xaml
+/// </summary>
+public partial class EditEnginesWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for EditEnginesWindow.xaml
-    /// </summary>
-    public partial class EditEnginesWindow : Window
+    public EditEnginesWindow()
     {
-        public EditEnginesWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

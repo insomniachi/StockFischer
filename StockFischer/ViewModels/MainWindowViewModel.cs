@@ -1,37 +1,52 @@
-﻿using OpenPGN;
-using OpenPGN.Models;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+﻿using ReactiveUI;
 using StockFischer.Messages;
 using System.Windows.Input;
 
-namespace StockFischer.ViewModels
+namespace StockFischer.ViewModels;
+
+public class MainWindowViewModel : ReactiveObject, IScreen
 {
-    public class MainWindowViewModel : ReactiveObject, IScreen
+    private readonly IViewService _viewService;
+
+    /// <summary>
+    /// Open a game from a pgn file
+    /// </summary>
+    public ICommand OpenPgnCommand { get; }
+
+    /// <summary>
+    /// Enable AutoPlay, engine will make move for both sides when desired depth is reached.
+    /// </summary>
+    public ICommand AutoPlayCommand { get; }
+
+    /// <summary>
+    /// Command to stop whatever the engine is doing now
+    /// </summary>
+    public ICommand StopEngineCommand { get; }
+
+    /// <summary>
+    /// Navigation router
+    /// </summary>
+    public RoutingState Router { get; } = new();
+
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="viewService"></param>
+    public MainWindowViewModel(IViewService viewService)
     {
-        private readonly IViewService _viewService;
+        _viewService = viewService;
 
-        public ICommand OpenPgnCommand { get; }
-        public ICommand AutoPlayCommand { get; }
-        public ICommand StopEngineCommand { get; }
-        public RoutingState Router { get; } = new();
-
-        public MainWindowViewModel(IViewService viewService)
+        OpenPgnCommand = ReactiveCommand.Create(() =>
         {
-            _viewService = viewService;
+            var game = _viewService.OpenPgn();
 
-            OpenPgnCommand = ReactiveCommand.Create(() => 
+            if (game is { })
             {
-                var game = _viewService.OpenPgn();
-
-                if (game is { })
-                {
-                    MessageBus.Current.SendMessage(new GameOpenedMessage { Game = game });
-                }
-            });
-            AutoPlayCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StartAutoPlayMessage()));
-            StopEngineCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StopEngineMessage()));
-        }
-        
+                MessageBus.Current.SendMessage(new GameOpenedMessage { Game = game });
+            }
+        });
+        AutoPlayCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StartAutoPlayMessage()));
+        StopEngineCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StopEngineMessage()));
     }
+
 }

@@ -1,4 +1,3 @@
-using System.Windows.Controls;
 using Fluent;
 using ReactiveUI;
 

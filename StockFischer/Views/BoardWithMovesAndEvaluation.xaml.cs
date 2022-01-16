@@ -1,16 +1,12 @@
-﻿using StockFischer.ViewModels;
+﻿namespace StockFischer.Views;
 
-namespace StockFischer.Views
+/// <summary>
+/// Interaction logic for BoardWithMovesAndEvaluation.xaml
+/// </summary>
+public partial class BoardWithMovesAndEvaluation
 {
-    /// <summary>
-    /// Interaction logic for BoardWithMovesAndEvaluation.xaml
-    /// </summary>
-    public partial class BoardWithMovesAndEvaluation
+    public BoardWithMovesAndEvaluation()
     {
-        public BoardWithMovesAndEvaluation(LiveBoardViewModel vm)
-        {
-            InitializeComponent();
-            DataContext = ViewModel = vm;
-        }
+        InitializeComponent();
     }
 }

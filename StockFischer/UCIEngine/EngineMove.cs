@@ -1,33 +1,32 @@
 ﻿using OpenPGN.Models;
 using System.ComponentModel;
 
-namespace StockFischer.Engine
+namespace StockFischer.Engine;
+
+public class EngineMove
 {
-    public class EngineMove
+    public Square From { get; set; }
+    public Square To { get; set; }
+    public PieceType? PromotedPiece { get; set; }
+
+    public override string ToString()
     {
-        public Square From { get; set; }
-        public Square To { get; set; }
-        public PieceType? PromotedPiece { get; set; }
+        return $"{From}{To}{PromotedPiece}";
+    }
 
-        public override string ToString()
+    private static string PieceToString(PieceType? p)
+    {
+        if (p == null) return string.Empty;
+
+        return p switch
         {
-            return $"{From}{To}{PromotedPiece}";
-        }
-
-        private static string PieceToString(PieceType? p)
-        {
-            if (p == null) return string.Empty;
-
-            return p switch
-            {
-                PieceType.Pawn => "p",
-                PieceType.Knight => "n",
-                PieceType.Bishop => "b",
-                PieceType.Rook => "r",
-                PieceType.Queen => "q",
-                PieceType.King => "k",
-                _ => throw new InvalidEnumArgumentException()
-            };
-        }
+            PieceType.Pawn => "p",
+            PieceType.Knight => "n",
+            PieceType.Bishop => "b",
+            PieceType.Rook => "r",
+            PieceType.Queen => "q",
+            PieceType.King => "k",
+            _ => throw new InvalidEnumArgumentException()
+        };
     }
 }
