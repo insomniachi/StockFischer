@@ -1,28 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using StockFischer.ViewModels;
 
 namespace StockFischer.Views
 {
     /// <summary>
     /// Interaction logic for BoardWithMovesAndEvaluation.xaml
     /// </summary>
-    public partial class BoardWithMovesAndEvaluation : UserControl
+    public partial class BoardWithMovesAndEvaluation
     {
-        public BoardWithMovesAndEvaluation()
+        public BoardWithMovesAndEvaluation(LiveBoardViewModel vm)
         {
             InitializeComponent();
+            DataContext = ViewModel = vm;
         }
     }
 }

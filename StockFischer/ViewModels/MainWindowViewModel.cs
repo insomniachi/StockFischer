@@ -1,167 +1,37 @@
-﻿using Microsoft.Extensions.Logging;
-using OpenPGN;
+﻿using OpenPGN;
 using OpenPGN.Models;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using StockFischer.Engine;
-using StockFischer.Models;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+using StockFischer.Messages;
 using System.Windows.Input;
 
 namespace StockFischer.ViewModels
 {
-    public class MainWindowViewModel : ReactiveObject
+    public class MainWindowViewModel : ReactiveObject, IScreen
     {
-        private readonly ILogger _logger;
+        private readonly IViewService _viewService;
 
-        private UCIEngine _engine;
-        private LiveBoard _board;
-        public LiveBoard Board
+        public ICommand OpenPgnCommand { get; }
+        public ICommand AutoPlayCommand { get; }
+        public ICommand StopEngineCommand { get; }
+        public RoutingState Router { get; } = new();
+
+        public MainWindowViewModel(IViewService viewService)
         {
-            get => _board;
-            set
+            _viewService = viewService;
+
+            OpenPgnCommand = ReactiveCommand.Create(() => 
             {
-                if(_board is not null)
+                var game = _viewService.OpenPgn();
+
+                if (game is { })
                 {
-                    ((INotifyPropertyChanged)_board.Moves).PropertyChanged -= MainWindowViewModel_PropertyChanged;
+                    MessageBus.Current.SendMessage(new GameOpenedMessage { Game = game });
                 }
-
-                _board = value;
-
-                this.RaisePropertyChanged(nameof(Board));
-
-                ((INotifyPropertyChanged)_board.Moves).PropertyChanged += MainWindowViewModel_PropertyChanged;
-            }
+            });
+            AutoPlayCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StartAutoPlayMessage()));
+            StopEngineCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StopEngineMessage()));
         }
-
-        [Reactive]
-        public Color Perspective { get; set; } = Color.White;
-
-        [Reactive]
-        public bool IsPromoting { get; set; }
-
-        [Reactive]
-        public PotentialVariationModel EngineVariation { get; set; }
-
-        public string InputFen { get; set; }
-        public bool AutoPlayEnabled { get; set; }
-
-        public ICommand LoadFenCommand { get; set; }
-        public ICommand TogglePerspectiveCommand { get; set; }
-        public ICommand OpenPgnCommand { get; set; }
-        public ICommand GoBackCommand { get; set; }
-        public ICommand GoForwardCommand { get; set; }
-        public ICommand AutoPlayCommand { get; set; }
-        public ICommand StopEngineCommand { get; set; }
-
-        public MainWindowViewModel()
-        {
-            Board = LiveBoard.NewGame();
-            //Board = LiveBoard.FromPgnFile(@"C:\Users\Athul\Desktop\pgn.txt");
-            //Board.MovePlayed += OnMove;
-
-            //this.WhenAnyValue(x => x.Board)
-            //    .Buffer(2, 1)
-            //    .Select(b => (Previous: b[0], Current: b[1]))
-            //    .Subscribe(OnBoardChanged);
-
-            LoadFenCommand = ReactiveCommand.Create(LoadFen);
-            TogglePerspectiveCommand = ReactiveCommand.Create(TogglePerspective);
-            OpenPgnCommand = ReactiveCommand.Create(OpenPgn);
-            GoBackCommand = ReactiveCommand.Create(Board.GoBack);
-            GoForwardCommand = ReactiveCommand.Create(Board.GoForward);
-            AutoPlayCommand = ReactiveCommand.Create(AutoPlay);
-            StopEngineCommand = ReactiveCommand.Create(StopEngine);
-
-            // TODO make this path configurable
-            _engine = new(@"C:\Users\Athul\Downloads\stockfish_14_win_x64_avx2\stockfish_14_win_x64_avx2\stockfish_14_x64_avx2.exe");
-            _engine.PotentialVariationCalculated += OnPotentialVariationCalculated;
-        }
-
-
-        private async void MainWindowViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "Current")
-            {
-                StopEngine();
-                _engine.SetFenPosition(Board.Moves.Current.Fen);
-
-                await Task.Delay(500);
-                _engine.Go();
-            }
-        }
-
-        /// <summary>
-        /// Gets called by the engine regulary by the engine when it calculates a variation
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void OnPotentialVariationCalculated(object sender, PotentialVariation e)
-        {
-            var moves = e.Moves.ToList();
-            EngineVariation = new(Board.Moves.Current?.Fen ?? BoardSetup.StartingPosition, e);
-
-            if (AutoPlayEnabled && e.Depth == 27)
-            {
-                StopEngine();
-
-                await Task.Delay(100);
-
-                var move = moves.First();
-
-                Application.Current.Dispatcher.Invoke(() => Board.TryMakeMove(move.From, move.To));
-            }
-        }
-
-        /// <summary>
-        /// Load positon from fen
-        /// </summary>
-        private void LoadFen() => Board = LiveBoard.FromFen(InputFen);
         
-        /// <summary>
-        /// Toggle board perspective
-        /// </summary>
-        private void TogglePerspective() => Perspective = Perspective.Invert();
-        
-        /// <summary>
-        /// Load position and moves made from pgn
-        /// </summary>
-        private void OpenPgn()
-        {
-            Microsoft.Win32.OpenFileDialog dialog = new();
-            var result = dialog.ShowDialog();
-
-            if(result == true)
-            {
-                Board = LiveBoard.FromPgnFile(dialog.FileName);
-            }
-        }
-
-        /// <summary>
-        /// Auto play with engine from the current postion
-        /// </summary>
-        private void AutoPlay()
-        {
-            AutoPlayEnabled = true;
-
-            if(Board.Moves.Current is null)
-            {
-                _engine.SetNewGamePosition();
-            }
-            else
-            {
-                _engine.SetFenPosition(Board.Moves.Current.Fen);
-            }
-
-            _engine.Go();
-        }
-
-        /// <summary>
-        /// Tell engine to stop calculating
-        /// </summary>
-        private void StopEngine() => _engine.Stop();
     }
 }

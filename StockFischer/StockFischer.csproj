@@ -6,20 +6,36 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>StockFischer</AssemblyName>
     <RootNamespace>StockFischer</RootNamespace>
+    <StartupObject>StockFischer.App</StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\chess-game.png" />
+    <None Remove="Assets\idea.png" />
+    <None Remove="Assets\knight.png" />
+    <None Remove="Assets\move.png" />
+    <None Remove="Assets\stop.png" />
+  </ItemGroup>
 
   
   <ItemGroup>
+    <PackageReference Include="DataContainer.NET" Version="1.1.5" />
     <PackageReference Include="Fluent.Ribbon" Version="9.0.1" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
     <PackageReference Include="ReactiveUI.Events.WPF" Version="15.1.1" />
-    <PackageReference Include="ReactiveUI.Fody" Version="17.1.9" />
-    <PackageReference Include="ReactiveUI.WPF" Version="17.1.9" />
+    <PackageReference Include="ReactiveUI.Fody" Version="17.1.17" />
+    <PackageReference Include="ReactiveUI.WPF" Version="17.1.17" />
+    <PackageReference Include="Splat.Microsoft.Extensions.DependencyInjection" Version="14.1.17" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\chess-game.png" />
+    <Resource Include="Assets\idea.png" />
+    <Resource Include="Assets\knight.png" />
+    <Resource Include="Assets\move.png" />
+    <Resource Include="Assets\stop.png" />
     <Resource Include="Assets\Themes\Default\black_bishop.png" />
     <Resource Include="Assets\Themes\Default\black_king.png" />
     <Resource Include="Assets\Themes\Default\black_knight.png" />
@@ -32,12 +48,17 @@
     <Resource Include="Assets\Themes\Default\white_pawn.png" />
     <Resource Include="Assets\Themes\Default\white_queen.png" />
     <Resource Include="Assets\Themes\Default\white_rook.png" />
-    <None Remove="Assets\chess-board.png" />
     <Resource Include="Assets\chess-board.png" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OpenPGN\OpenPGN.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

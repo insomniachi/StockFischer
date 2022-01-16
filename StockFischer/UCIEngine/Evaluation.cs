@@ -13,6 +13,10 @@ namespace StockFischer.Engine
             {
                 return $"{(Math.Sign(MateIn) > 0 ? "+" : "-" )}M{Math.Abs(MateIn)}";
             }
+            else if(Score == 0)
+            {
+                return "0";
+            }
             else
             {
                 return $"{(Math.Sign(Score) > 0 ? "+" : "-")}{Math.Abs(Score)}";

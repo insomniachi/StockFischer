@@ -200,10 +200,11 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     /// <param name="file"></param>
     /// <returns></returns>
-    public static LiveBoard FromPgnFile(string file)
+    public static LiveBoard FromPgnFile(string file) => FromGame(Game.FromPgnFile(file));
+
+    public static LiveBoard FromGame(Game game)
     {
         var board = NewGame();
-        var game = Game.FromPgnFile(file);
         foreach (var item in game.MoveText)
         {
             switch (item)
@@ -217,9 +218,7 @@ public class LiveBoard : ReactiveObject
                     break;
             }
         }
-
         board.GoToMove(board.Moves.Current);
-
         return board;
     }
 
@@ -406,7 +405,8 @@ public class LiveBoard : ReactiveObject
                 // Check if it's a castling move (https://en.wikipedia.org/wiki/Castling).
                 if (SelectedPiece is King king &&
                     (king.CanCastleKingSide || king.CanCastleQueenSide) &&
-                    (square == king.KingSideCastleSquare || square == king.QueenSideCastleSquare))
+                    (square == king.KingSideCastleSquare || square == king.QueenSideCastleSquare) &&
+                    (king.Square == Square.E1 || king.Square == Square.E8))
                 {
                     BoardSetup.EnPassantSquare = null;
                     moveModel = Castle(SelectedPiece, square);
@@ -422,6 +422,8 @@ public class LiveBoard : ReactiveObject
                 else if (SelectedPiece.Type == PieceType.Pawn && square.Rank is 1 or 8)
                 {
                     BoardSetup.EnPassantSquare = null;
+
+                    // TODO : need to give choice on promoted piece
                     moveModel = Promote(SelectedPiece, square);
                 }
                 // Otherwise move the piece to the square
@@ -533,7 +535,7 @@ public class LiveBoard : ReactiveObject
             LivePiece = piece,
             TargetSquare = square,
             OriginSquare = piece.Square,
-            CapturedPiece = GetElement<LivePiece>(x => x.Square == square)
+            CapturedPiece = GetElement<LivePiece>(x => x.Square == square.Down(piece.Color))
         };
     }
 

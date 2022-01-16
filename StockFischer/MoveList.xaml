@@ -41,9 +41,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ScrollViewer MaxHeight="600" Padding="3">
-            <ItemsControl
-            ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:MoveList}, Path=Moves}"
-            AlternationCount="2">
+            <ItemsControl ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:MoveList}, Path=Board.Moves}"
+                          AlternationCount="2">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Name="Grid">
@@ -68,7 +67,7 @@
                                         <MultiBinding Converter="{StaticResource IsSelected}">
                                             <Binding Path="White"/>
                                             <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:MoveList}"
-                                                 Path="Moves.Current" />
+                                                 Path="Board.Moves.Current" />
                                         </MultiBinding>
                                     </TextBlock.FontWeight>
                                 </TextBlock>
@@ -80,7 +79,7 @@
                                         <MultiBinding Converter="{StaticResource IsSelected}">
                                             <Binding Path="Black"/>
                                             <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:MoveList}"
-                                                 Path="Moves.Current" />
+                                                 Path="Board.Moves.Current" />
                                         </MultiBinding>
                                     </TextBlock.FontWeight>
                                 </TextBlock>

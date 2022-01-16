@@ -18,7 +18,7 @@ public class UCIEngine
 
     public event EventHandler<PotentialVariation> PotentialVariationCalculated; 
     
-    public UCIEngineSettings Settings { get; set; }
+    public UCIEngineOptions Settings { get; set; }
     public int Depth { get; set; }
     public int SkillLevel
     {
@@ -35,11 +35,11 @@ public class UCIEngine
     /// 
     /// </summary>
     /// <param name="path"></param>
-    /// <param name="depth"></param>
+    /// <param name="maxDepth"></param>
     /// <param name="settings"></param>
-    public UCIEngine(string path, int depth = 27, UCIEngineSettings settings = null)
+    public UCIEngine(string path, int maxDepth = 27, UCIEngineOptions settings = null)
     {
-        Depth = depth;
+        Depth = maxDepth;
         _process = new UCIEngineProcess(path);
         _process.Start();
         _process.PotentialVariationCalculated += (_, e) =>
@@ -49,7 +49,7 @@ public class UCIEngine
 
         if (settings == null)
         {
-            Settings = new UCIEngineSettings();
+            Settings = new UCIEngineOptions();
         }
         else
         {
@@ -65,6 +65,8 @@ public class UCIEngine
 
         StartNewGame();
     }
+
+    public UCIEngine(UCIEngineInfo info, int maxDepth = 27) : this(info.Path, maxDepth, info.Options) { }
 
 
     /// <summary>

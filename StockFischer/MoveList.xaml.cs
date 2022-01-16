@@ -1,14 +1,11 @@
-﻿using System;
+﻿using StockFischer.Models;
+using System;
 using System.Globalization;
-using StockFischer.Models;
-using StockFischer.ViewModels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using OpenPGN.Models;
 
 namespace StockFischer;
 
@@ -17,25 +14,18 @@ namespace StockFischer;
 /// </summary>
 public partial class MoveList
 {
-    public static readonly DependencyProperty MovesProperty =
-        DependencyProperty.Register("Moves", typeof(MoveCollection), typeof(MoveList), new PropertyMetadata(null));
+    public static readonly DependencyProperty BoardProperty =
+        DependencyProperty.Register("Board", typeof(LiveBoard), typeof(MoveList), new PropertyMetadata(null));
 
-    private MainWindowViewModel viewModel = null;
     public MoveList()
     {
         InitializeComponent();
-        DataContextChanged += OnDataContextChanged;
     }
 
-    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    public LiveBoard Board
     {
-        viewModel = e.NewValue as MainWindowViewModel;
-    }
-
-    public MoveCollection Moves
-    {
-        get => (MoveCollection)GetValue(MovesProperty);
-        set => SetValue(MovesProperty, value);
+        get => (LiveBoard)GetValue(BoardProperty);
+        set => SetValue(BoardProperty, value);
     }
     
 
@@ -44,33 +34,29 @@ public partial class MoveList
         var pair = ((ContentControl) sender).DataContext as MovePair;
         var move = ((ContentControl) sender).Tag as MoveModel;
 
-        Moves.CurrentPair = pair;
-        Moves.Current = move;
+        Board.Moves.CurrentPair = pair;
+        Board.Moves.Current = move;
         
-        viewModel.Board.GoToMove(move);
+        Board.GoToMove(move);
     }
 
     private void PrevClick(object sender, MouseButtonEventArgs e)
     {
-        MainWindowViewModel vm = DataContext as MainWindowViewModel;
-        vm.Board.GoBack();
+        Board.GoBack();
     }
 
     private void NextClick(object sender, MouseButtonEventArgs e)
     {
-        MainWindowViewModel vm = DataContext as MainWindowViewModel;
-        vm.Board.GoForward();
+        Board.GoForward();
     }
 
     private void PlayClick(object sender, MouseButtonEventArgs e)
     {
-        MainWindowViewModel vm = DataContext as MainWindowViewModel;
-
         Task.Run(() =>
         {
             Dispatcher.Invoke(async () =>
             {
-                while (vm.Board.GoForward())
+                while (Board.GoForward())
                 {
                     await Task.Delay(1000);
                 }

@@ -1,7 +1,9 @@
-﻿using StockFischer.ViewModels;
+﻿using Microsoft.Extensions.DependencyInjection;
+using ReactiveUI;
+using StockFischer.ViewModels;
+using System.Reactive.Disposables;
 using System.Windows;
 using System.Windows.Input;
-using ReactiveUI;
 
 namespace StockFischer
 {
@@ -10,31 +12,21 @@ namespace StockFischer
     /// </summary>
     public partial class MainWindow
     {
-        public MainWindowViewModel ViewModel { get; set; }
-
-        public MainWindow()
+        public MainWindow(MainWindowViewModel vm)
         {
             InitializeComponent();
-            DataContext =  ViewModel = new();
-        }
+            DataContext =  ViewModel = vm;
 
-        private void MainWindow_OnKeyDown(object sender, KeyEventArgs e)
-        {
-            switch (e.Key)
+            MessageBus.Current.RegisterMessageSource(this.Events().PreviewKeyDown);
+
+            this.WhenActivated(d =>
             {
-                case Key.Up:
-                    ViewModel!.Board.GoToStart();
-                    break;
-                case Key.Down:
-                    ViewModel!.Board.GoToEnd();
-                    break;
-                case Key.Right:
-                    ViewModel!.Board.GoForward();
-                    break;
-                case Key.Left:
-                    ViewModel!.Board.GoBack();
-                    break;
-            }
+                this.OneWayBind(ViewModel, x => x.Router, x => x.RoutedViewHost.Router)
+                    .DisposeWith(d);
+
+                ViewModel.Router.Navigate.Execute(App.Services.GetRequiredService<LiveBoardViewModel>());
+            });
+
         }
     }
 }

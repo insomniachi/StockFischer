@@ -1,17 +1,17 @@
-﻿<fluent:RibbonWindow x:Class="StockFischer.MainWindow"
+﻿<rxui:ReactiveWindow x:Class="StockFischer.MainWindow"
+                     x:TypeArguments="vm:MainWindowViewModel"
                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                     xmlns:local="clr-namespace:StockFischer"
                      xmlns:vm="clr-namespace:StockFischer.ViewModels"
                      mc:Ignorable="d"
                      d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
                      xmlns:fluent="urn:fluent-ribbon"
-                     xmlns:rx="http://reactiveui.net"
-                     xmlns:views="clr-namespace:StockFischer.Views"
+                     xmlns:rxui="http://reactiveui.net"
                      Title="MainWindow"
-                     PreviewKeyDown="MainWindow_OnKeyDown">
+                     Width="1400"
+                     WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="150"/>
@@ -19,7 +19,6 @@
         </Grid.RowDefinitions>
         
         <fluent:Ribbon Grid.Row="0" Focusable="False">
-            <!--Tabs-->
             <fluent:RibbonTabItem Header="Home">
                 <fluent:RibbonGroupBox Header="PGN">
                     <fluent:Button Header="Open"
@@ -29,18 +28,24 @@
                 </fluent:RibbonGroupBox>
                 <fluent:RibbonGroupBox Header="Engine">
                     <fluent:Button Header="Auto Play"
-                                   LargeIcon="Assets/chess-board.png"
+                                   LargeIcon="Assets/move.png"
                                    Width="50"
                                    Command="{Binding AutoPlayCommand}"/>
                     <fluent:Button Header="Stop"
-                                   LargeIcon="Assets/chess-board.png"
+                                   LargeIcon="Assets/stop.png"
                                    Width="50"
                                    Command="{Binding StopEngineCommand}"/>
+                    <fluent:Button Header="Edit"
+                                   LargeIcon="Assets/knight.png"
+                                   Width="50"
+                                   Command="{Binding AutoPlayCommand}"/>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
         </fluent:Ribbon>
 
-        <views:BoardWithMovesAndEvaluation Grid.Row="1" Margin="10 0 0 10"/>
+        <rxui:RoutedViewHost Margin="10 0 0 10" 
+                             Grid.Row="1"
+                             Name="RoutedViewHost"/>
 
     </Grid>
-</fluent:RibbonWindow>
+</rxui:ReactiveWindow>

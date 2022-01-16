@@ -2,7 +2,7 @@
 
 namespace StockFischer.Engine;
 
-public record UCIEngineSettings
+public record UCIEngineOptions
 {
     public int Contempt { get; set; } = 0;
     public int Threads { get; set; } = 2;
@@ -27,4 +27,11 @@ public record UCIEngineSettings
             ["UCI_Chess960"] = UCIChess960.ToString(),
         };
     }
+}
+
+public class UCIEngineInfo
+{
+    public string Name { get; set; }
+    public string Path { get; set; }
+    public UCIEngineOptions Options { get; set; }
 }

@@ -37,6 +37,7 @@ namespace StockFischer
                 var barHeight = eb.Bar.ActualHeight;
                 var blackBarHeight = barHeight / 2;
                 var ev = evaluation.Score;
+                ev = ev >= 0 ? Math.Min(10, ev) : Math.Max(-10, ev);
                 double offset;
                 
                 if (double.IsNegativeInfinity(ev))
@@ -82,9 +83,9 @@ namespace StockFischer
             Loaded += (_, __) => BlackBar.Height = Bar.ActualHeight / 2;
         }
 
-        public double Evaluation
+        public Evaluation Evaluation
         {
-            get { return (double)GetValue(EvaluationProperty); }
+            get { return (Evaluation)GetValue(EvaluationProperty); }
             set { SetValue(EvaluationProperty, value); }
         }
 

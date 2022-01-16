@@ -161,7 +161,7 @@ public class BoardSetup
 
         var pos = Regex.Replace(sb.ToString(), "x+", m => m.Value.Length.ToString());
         var activeColor = IsWhiteMove ? 'w' : 'b';
-        var castle = CanWhiteCastleKingSide == false && CanBlackCastleKingSide == false && CanWhiteCastleQueenSide && CanBlackCastleQueenSide
+        var castle = CanWhiteCastleKingSide == false && CanBlackCastleKingSide == false && CanWhiteCastleQueenSide == false && CanBlackCastleQueenSide == false
             ? "-"
             : $"{(CanWhiteCastleKingSide ? "K" : string.Empty)}{(CanWhiteCastleQueenSide ? "Q" : string.Empty)}{(CanBlackCastleKingSide ? "k" : string.Empty)}{(CanBlackCastleQueenSide ? "q" : string.Empty)}";
 

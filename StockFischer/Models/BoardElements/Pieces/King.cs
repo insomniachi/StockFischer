@@ -27,11 +27,11 @@ namespace StockFischer.Models.BoardElements.Pieces
             var candidates = MoveTemplate.GetMoves(Square)
                 .Where(x => boardSetup[x] is null || boardSetup[x] is { } p && p.Color != Color).ToList();
 
-            if (Color == Color.White ? boardSetup.CanWhiteCastleKingSide : boardSetup.CanBlackCastleKingSide && CanCastleKingSide)
+            if ((Color == Color.White ? boardSetup.CanWhiteCastleKingSide : boardSetup.CanBlackCastleKingSide) && CanCastleKingSide)
             {
                 candidates.Add(KingSideCastleSquare);
             }
-            if (Color == Color.White ? boardSetup.CanWhiteCastleQueenSide : boardSetup.CanBlackCastleQueenSide && CanCastleQueenSide)
+            if ((Color == Color.White ? boardSetup.CanWhiteCastleQueenSide : boardSetup.CanBlackCastleQueenSide) && CanCastleQueenSide)
             {
                 candidates.Add(QueenSideCastleSquare);
             }
