@@ -1,4 +1,5 @@
-﻿using OpenPGN;
+﻿using Microsoft.Extensions.Logging;
+using OpenPGN;
 using OpenPGN.Models;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -20,7 +21,7 @@ namespace StockFischer.Models;
 /// </summary>
 public class LiveBoard : ReactiveObject
 {
-
+    private ILogger _logger;
     public event EventHandler<MoveModel> MovePlayed;
     private void RaiseMovePlayed(MoveModel move) => MovePlayed?.Invoke(this, move);
 
@@ -55,7 +56,7 @@ public class LiveBoard : ReactiveObject
     /// </summary>
     [Reactive]
     private LivePiece SelectedPiece { get; set; }
-    
+
     /// <summary>
     /// Default constructor
     /// Initializes <see cref="BoardSetup"/> with starting position
@@ -73,7 +74,7 @@ public class LiveBoard : ReactiveObject
         this.WhenAnyValue(x => x.SelectedPiece)
             .Subscribe(p =>
             {
-                if(p is null)
+                if (p is null)
                 {
                     Clear<SquareHighlight>();
                 }
@@ -161,7 +162,7 @@ public class LiveBoard : ReactiveObject
     /// <param name="startpos"></param>
     /// <param name="moves"></param>
     /// <returns></returns>
-    public static IEnumerable<MoveModel> ConvertMovesToAlgebraic(string startpos, IEnumerable<EngineMove> moves)
+    public static IEnumerable<MoveModel> ConvertMovesToAlgebraic(string startpos, IEnumerable<UCIMove> moves)
     {
         var board = FromFen(startpos);
 
@@ -181,7 +182,7 @@ public class LiveBoard : ReactiveObject
     {
         foreach (var move in Moves)
         {
-            if(move.White is { })
+            if (move.White is { })
                 yield return move.White;
 
             if (move.Black is { })
@@ -260,7 +261,7 @@ public class LiveBoard : ReactiveObject
 
         Clear<Check>();
 
-        if(model.Move.PromotedPiece is PieceType)
+        if (model.Move.PromotedPiece is PieceType)
         {
             var pawn = new Piece(PieceType.Pawn, model.Color);
             BoardSetup[model.OriginSquare] = pawn;
@@ -366,21 +367,32 @@ public class LiveBoard : ReactiveObject
             // If we have a selected piece, and the clicked square also contains a piece
             if (BoardSetup[square] is { } piece)
             {
+                // Check if it's a castling move (https://en.wikipedia.org/wiki/Castling).
+                if (SelectedPiece is King king &&
+                    (king.CanCastleKingSide || king.CanCastleQueenSide) &&
+                    (king.KingSideCastleSquares.Contains(square) || king.QueenSideCastleSquares.Contains(square)) &&
+                    (king.Square == Square.E1 || king.Square == Square.E8))
+                {
+                    BoardSetup.EnPassantSquare = null;
+                    moveModel = Castle(SelectedPiece, square);
+                }
+
                 // if it is the same color as active player Update the selected piece and show legal moves
-                if (piece.Color == ActiveColor)
+                else if (piece.Color == ActiveColor)
                 {
                     SelectedPiece = Elements.OfType<LivePiece>().Single(x => x.Square == square);
                     return false;
                 }
 
                 // make sure the the selected piece could actually move to that square
-                if (!SelectedPiece.GetLegalMoves(BoardSetup).Contains(square))
+                else if (!SelectedPiece.GetLegalMoves(BoardSetup).Contains(square))
                 {
+                    _logger?.LogDebug("Invalid move, {piece} cannot move to {square}", SelectedPiece, square);
                     return false;
                 }
 
                 // If its a pawn move to a last rank, then we are promoting with a capture
-                if (SelectedPiece.Type == PieceType.Pawn && square.Rank is 1 or 8)
+                else if (SelectedPiece.Type == PieceType.Pawn && square.Rank is 1 or 8)
                 {
                     // TODO : need to give choice on promoted piece
                     moveModel = Promote(SelectedPiece, square, PieceType.Queen, true);
@@ -397,6 +409,7 @@ public class LiveBoard : ReactiveObject
                 // make sure the the selected piece could actually move to that square
                 if (!SelectedPiece.GetLegalMoves(BoardSetup).Contains(square))
                 {
+                    _logger?.LogDebug("Invalid move, {piece} cannot move to {square}", SelectedPiece, square);
                     Clear<SquareHighlight>();
                     return false;
                 }
@@ -404,7 +417,7 @@ public class LiveBoard : ReactiveObject
                 // Check if it's a castling move (https://en.wikipedia.org/wiki/Castling).
                 if (SelectedPiece is King king &&
                     (king.CanCastleKingSide || king.CanCastleQueenSide) &&
-                    (square == king.KingSideCastleSquare || square == king.QueenSideCastleSquare) &&
+                    (king.KingSideCastleSquares.Contains(square) || king.QueenSideCastleSquares.Contains(square)) &&
                     (king.Square == Square.E1 || king.Square == Square.E8))
                 {
                     BoardSetup.EnPassantSquare = null;
@@ -433,6 +446,8 @@ public class LiveBoard : ReactiveObject
                 }
             }
 
+            _logger?.LogDebug("Move created : {move}", moveModel);
+
             OnMovePlayed(moveModel);
 
             return true;
@@ -447,9 +462,18 @@ public class LiveBoard : ReactiveObject
     /// <returns>whether a move was made successfully.</returns>
     public bool TryMakeMove(Square from, Square to)
     {
-        if (from == null || to == null) return false;
+        using var _ =_logger?.BeginScope("TryMakeMove(from,to)");
 
-        if (BoardSetup[from] is null) return false;
+        if (from == null || to == null)
+        {
+            return false;
+        }
+
+        if (BoardSetup[from] is null)
+        {
+            _logger?.LogDebug("No piece found on {square}", from);
+            return false;
+        }
 
         SelectedPiece = GetElements<LivePiece>().Single(x => x.Square == from);
 
@@ -572,20 +596,27 @@ public class LiveBoard : ReactiveObject
     /// <param name="square">G1/C1 if white, G8/C8 if black</param>
     private MoveModel Castle(LivePiece piece, Square square)
     {
-        var type = (square == Square.G1 || square == Square.G8)
+        var king = piece as King;
+
+        var type = king.KingSideCastleSquares.Contains(square)
             ? MoveType.CastleKingSide
             : MoveType.CastleQueenSide;
 
+
+        var actualTarget = type == MoveType.CastleKingSide
+            ? king.KingSideCastleSquares.ElementAt(0)
+            : king.QueenSideCastleSquares.ElementAt(0);
+
         var move = new Move
         {
-            TargetSquare = square,
+            TargetSquare = actualTarget,
             Type = type
         };
 
         return new MoveModel(move)
         {
             LivePiece = piece,
-            TargetSquare = square,
+            TargetSquare = actualTarget,
             OriginSquare = piece.Square
         };
     }
@@ -605,7 +636,7 @@ public class LiveBoard : ReactiveObject
 
         piece.GetLegalMoves(BoardSetup)
              .ToList()
-             .ForEach(x => 
+             .ForEach(x =>
              {
                  Elements.Add(BoardSetup[x] is not null
                     ? new SquareHighlight2(x)
@@ -742,7 +773,7 @@ public class LiveBoard : ReactiveObject
         var prevSuggestions = Elements.OfType<T>().ToList();
         prevSuggestions.ForEach(x => Elements.Remove(x));
     }
-    
+
     /// <summary>
     /// Remove all the lements of given type statifying the predicate
     /// </summary>
@@ -766,9 +797,11 @@ public class LiveBoard : ReactiveObject
     {
         Clear<Check>();
 
+        move.MoveNumber = BoardSetup.FullMoveCount;
+
         if (isRewinding == false)
         {
-            ResolveAmbiguousMove(move); 
+            ResolveAmbiguousMove(move);
         }
 
         UpdateMoveOnBoard(move);
@@ -957,7 +990,7 @@ public class LiveBoard : ReactiveObject
         var piece = moveModel.LivePiece;
 
         var otherPieces = GetElements<LivePiece>().Where(x => x.Type == piece.Type && x.Color == piece.Color && x.Square != piece.Square);
-        
+
         foreach (var otherPiece in otherPieces)
         {
             if (!otherPiece.GetLegalMoves(BoardSetup).Contains(moveModel.Move.TargetSquare)) continue;
@@ -1008,7 +1041,7 @@ public class LiveBoard : ReactiveObject
         {
             var king = GetKing(color);
             piece = king;
-            model.TargetSquare = move.TargetSquare = move.Type == MoveType.CastleKingSide ? king.KingSideCastleSquare : king.QueenSideCastleSquare;
+            model.TargetSquare = move.TargetSquare = move.Type == MoveType.CastleKingSide ? king.KingSideCastleSquares.ElementAt(0) : king.QueenSideCastleSquares.ElementAt(0);
         }
         else if (pieces.Count > 1)
         {
@@ -1041,4 +1074,6 @@ public class LiveBoard : ReactiveObject
 
         OnMovePlayed(model);
     }
+
+    public void SetLogger(ILogger logger) => _logger = logger;
 }

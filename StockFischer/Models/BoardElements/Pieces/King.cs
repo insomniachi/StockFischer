@@ -12,14 +12,14 @@ internal class King : RangedPiece
     public bool CanCastleKingSide { get; set; }
     public bool CanCastleQueenSide { get; set; }
 
-    public Square KingSideCastleSquare { get; }
-    public Square QueenSideCastleSquare { get; }
+    public IEnumerable<Square> KingSideCastleSquares { get; }
+    public IEnumerable<Square> QueenSideCastleSquares { get; }
     public override string Glyph => Color == Color.White ? "♔" : "♚";
 
     public King(Piece piece, Square square) : base(piece, square)
     {
-        KingSideCastleSquare = piece.Color == Color.White ? Square.G1 : Square.G8;
-        QueenSideCastleSquare = piece.Color == Color.White ? Square.C1 : Square.C8;
+        KingSideCastleSquares = piece.Color == Color.White ? new[] { Square.G1, Square.H1 } : new[] { Square.G8, Square.H8 };
+        QueenSideCastleSquares = piece.Color == Color.White ? new[] { Square.C1 , Square.A1} : new[] { Square.C8, Square.A8 };
     }
     public override MoveTemplate MoveTemplate { get; } = MoveTemplate.King;
     public override IEnumerable<Square> GetLegalMoves(BoardSetup boardSetup)
@@ -29,11 +29,11 @@ internal class King : RangedPiece
 
         if ((Color == Color.White ? boardSetup.CanWhiteCastleKingSide : boardSetup.CanBlackCastleKingSide) && CanCastleKingSide)
         {
-            candidates.Add(KingSideCastleSquare);
+            candidates.AddRange(KingSideCastleSquares);
         }
         if ((Color == Color.White ? boardSetup.CanWhiteCastleQueenSide : boardSetup.CanBlackCastleQueenSide) && CanCastleQueenSide)
         {
-            candidates.Add(QueenSideCastleSquare);
+            candidates.AddRange(QueenSideCastleSquares);
         }
 
         return candidates.Where(x => !boardSetup.IsAttacked(x, Color.Invert()));

@@ -62,7 +62,7 @@
                             </TextBlock>
 
                             <ContentControl Grid.Column="1" MouseDown="OnClicked" Tag="{Binding White}" Style="{StaticResource MouseOver}">
-                                <TextBlock Text="{Binding White.Move}" Style="{StaticResource Text}">
+                                <TextBlock Text="{Binding White}" Style="{StaticResource Text}">
                                     <TextBlock.FontWeight>
                                         <MultiBinding Converter="{StaticResource IsSelected}">
                                             <Binding Path="White"/>
@@ -74,7 +74,7 @@
                             </ContentControl>
 
                             <ContentControl Grid.Column="2" MouseDown="OnClicked" Tag="{Binding Black}" Style="{StaticResource MouseOver}">
-                                <TextBlock Text="{Binding Black.Move}" Style="{StaticResource Text}">
+                                <TextBlock Text="{Binding Black}" Style="{StaticResource Text}">
                                     <TextBlock.FontWeight>
                                         <MultiBinding Converter="{StaticResource IsSelected}">
                                             <Binding Path="Black"/>

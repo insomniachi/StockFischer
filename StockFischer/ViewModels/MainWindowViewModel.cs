@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using Microsoft.Extensions.DependencyInjection;
+using ReactiveUI;
 using StockFischer.Messages;
 using System.Windows.Input;
 
@@ -22,6 +23,8 @@ public class MainWindowViewModel : ReactiveObject, IScreen
     /// Command to stop whatever the engine is doing now
     /// </summary>
     public ICommand StopEngineCommand { get; }
+
+    public ICommand WatchGameCommand { get; }
 
     /// <summary>
     /// Navigation router
@@ -47,6 +50,7 @@ public class MainWindowViewModel : ReactiveObject, IScreen
         });
         AutoPlayCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StartAutoPlayMessage()));
         StopEngineCommand = ReactiveCommand.Create(() => MessageBus.Current.SendMessage(new StopEngineMessage()));
+        WatchGameCommand = ReactiveCommand.Create(() => Router.Navigate.Execute(App.Services.GetRequiredService<SpectateViewModel>()));
     }
 
 }

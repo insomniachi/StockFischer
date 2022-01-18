@@ -18,6 +18,8 @@
     <PackageReference Include="ReactiveUI.Events.WPF" Version="15.1.1" />
     <PackageReference Include="ReactiveUI.Fody" Version="17.1.17" />
     <PackageReference Include="ReactiveUI.WPF" Version="17.1.17" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
     <PackageReference Include="Splat.Microsoft.Extensions.DependencyInjection" Version="14.1.17" />
   </ItemGroup>
 
@@ -43,6 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Lichess\Lichess.csproj" />
     <ProjectReference Include="..\OpenPGN\OpenPGN.csproj" />
   </ItemGroup>
 

@@ -34,7 +34,7 @@ public class PotentialVariation
     /// <summary>
     /// Variation calculated
     /// </summary>
-    public IEnumerable<EngineMove> Moves { get; init; }
+    public IEnumerable<UCIMove> Moves { get; init; }
 
     public override string ToString()
     {
@@ -74,26 +74,10 @@ public class PotentialVariation
                 eval = mate > 0 ? double.PositiveInfinity : double.NegativeInfinity;
             }
 
-            List<EngineMove> moves = new();
+            List<UCIMove> moves = new();
             foreach (var move in pv.Split(" "))
             {
-                if (move.Length < 4) continue;
-
-                PieceType? promotedPiece = null;
-                var origin = Square.New((File)move[0], int.Parse(move[1].ToString()));
-                var target = Square.New((File)move[2], int.Parse(move[3].ToString()));
-
-                if (move.Length == 5)
-                {
-                    promotedPiece = CharToPiece(move[4]);
-                }
-
-                moves.Add(new EngineMove
-                {
-                    From = origin,
-                    To = target,
-                    PromotedPiece = promotedPiece,
-                });
+                moves.Add(UCIMove.Parse(move));
             }
 
 
@@ -108,19 +92,5 @@ public class PotentialVariation
         }
 
         return null;
-    }
-
-    private static PieceType CharToPiece(char piece)
-    {
-        return char.ToLower(piece) switch
-        {
-            'p' => PieceType.Pawn,
-            'n' => PieceType.Knight,
-            'b' => PieceType.Bishop,
-            'r' => PieceType.Rook,
-            'q' => PieceType.Queen,
-            'k' => PieceType.King,
-            _ => throw new ArgumentException(null, nameof(piece))
-        };
     }
 }

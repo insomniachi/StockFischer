@@ -1,6 +1,7 @@
 ﻿using OpenPGN.Models;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -33,6 +34,7 @@ public class MoveModel
     public Square TargetSquare { get; set; }
     public Square OriginSquare { get; set; }
     public PieceType PieceType => LivePiece.Type;
+    public int MoveNumber { get; set; }
 
     public MoveModel(Move m)
     {
@@ -52,7 +54,7 @@ public class MoveModel
             return algebraic;
         }
 
-        return $"{LivePiece.Glyph}{algebraic[1..]}";
+        return $"{LivePiece.Glyph}{algebraic[1..].Split(' ').FirstOrDefault()}";
     }
 }
 
@@ -84,7 +86,7 @@ public class MoveCollection : ObservableCollection<MovePair>
     {
         if (move.Color == Color.White)
         {
-            CurrentPair = new MovePair { MoveNumber = Count + 1 };
+            CurrentPair = new MovePair { MoveNumber = move.MoveNumber };
             Current = CurrentPair.White = move;
             Add(CurrentPair);
         }
@@ -92,7 +94,7 @@ public class MoveCollection : ObservableCollection<MovePair>
         {
             if (CurrentPair is null)
             {
-                CurrentPair = new MovePair { MoveNumber = Count + 1 };
+                CurrentPair = new MovePair { MoveNumber = move.MoveNumber };
                 Add(CurrentPair);
             }
 
@@ -157,6 +159,44 @@ public class MoveCollection : ObservableCollection<MovePair>
         CurrentPair = this.Last();
         Current = CurrentPair.Black ?? CurrentPair.White;
         return true;
+    }
+
+    public IEnumerable<string> AsUciMoves()
+    {
+        foreach (var item in this)
+        {
+            if(item.White is {})
+            {
+                yield return GetMoveAsUciString(item.White);
+            }
+            if(item.Black is { })
+            {
+                yield return GetMoveAsUciString(item.Black);
+            }
+
+        }
+    }
+
+    public static string GetMoveAsUciString(MoveModel move)
+    {
+        if(move.Color == Color.White)
+        {
+            return move.Move.Type switch
+            {
+                MoveType.CastleKingSide => "e1h1",
+                MoveType.CastleQueenSide => "e1a1",
+                _ => $"{move.OriginSquare}{move.TargetSquare}"
+            };
+        }
+        else
+        {
+            return move.Move.Type switch
+            {
+                MoveType.CastleKingSide => "e8h8",
+                MoveType.CastleQueenSide => "e8a8",
+                _ => $"{move.OriginSquare}{move.TargetSquare}"
+            };
+        }
     }
 
     protected override event PropertyChangedEventHandler PropertyChanged;

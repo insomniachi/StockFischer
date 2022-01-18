@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using Serilog;
 using Splat;
 using Splat.Microsoft.Extensions.DependencyInjection;
 using StockFischer.ViewModels;
@@ -38,7 +39,11 @@ public partial class App : Application
                 resolver.InitializeReactiveUI();
                 ConfigureServices(services);
             })
-            .ConfigureLogging(logging => logging.AddConsole())
+            .ConfigureLogging(logging => 
+            {
+                logging.ClearProviders();
+                logging.AddSerilog();
+            })
             .Build();
 
         Services = _host.Services;
@@ -47,15 +52,21 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
+        Log.Logger = new LoggerConfiguration()
+                        .MinimumLevel.Debug()
+                        .WriteTo.File("log-.txt", rollingInterval: RollingInterval.Day)
+                        .CreateLogger();
         services.AddSingleton<AppSettings>();
         services.AddTransient<IViewService, ViewService>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<IScreen, MainWindowViewModel>(x => x.GetRequiredService<MainWindowViewModel>());
         services.AddTransient<LiveBoardViewModel>();
+        services.AddTransient<SpectateViewModel>();
         services.AddTransient<MainWindow>();
 
         //Routing
         services.AddTransient<IViewFor<LiveBoardViewModel>, BoardWithMovesAndEvaluation>();
+        services.AddTransient<IViewFor<SpectateViewModel>, SpectateGameView>();
     }
 
 

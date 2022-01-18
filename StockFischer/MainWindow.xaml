@@ -42,6 +42,14 @@
                                    Command="{Binding AutoPlayCommand}"/>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
+            <fluent:RibbonTabItem Header="Lichess">
+                <fluent:RibbonGroupBox Header="Watch">
+                    <fluent:Button Header="Watch Game"
+                                   LargeIcon="Assets/idea.png"
+                                   Width="50"
+                                   Command="{Binding WatchGameCommand}"/>
+                </fluent:RibbonGroupBox>
+            </fluent:RibbonTabItem>
         </fluent:Ribbon>
 
         <rxui:RoutedViewHost Margin="10 0 0 10" 
