@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Lichess;
+namespace Lichess.Board;
 
 public class LiveGameState : EventStream
 {
@@ -15,15 +15,15 @@ public class LiveGameState : EventStream
 
     protected override void ProcessJson(string json)
     {
-        if(json.Contains("gameFull") && JsonSerializer.Deserialize<GameFull>(json, Options) is { } gf)
+        if (json.Contains("gameFull") && JsonSerializer.Deserialize<GameFull>(json, Options) is { } gf)
         {
             StreamStarted?.Invoke(this, gf);
         }
-        else if(json.Contains("gameState") && JsonSerializer.Deserialize<GameState>(json, Options) is { } gs)
+        else if (json.Contains("gameState") && JsonSerializer.Deserialize<GameState>(json, Options) is { } gs)
         {
             StateChanged?.Invoke(this, gs);
         }
-        else if(json.Contains("chatLine") && JsonSerializer.Deserialize<ChatLine>(json, Options) is { } cl)
+        else if (json.Contains("chatLine") && JsonSerializer.Deserialize<ChatLine>(json, Options) is { } cl)
         {
             ChatLineChanged?.Invoke(this, cl);
         }

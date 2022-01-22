@@ -33,6 +33,12 @@ public class SquareHighlight2 : SquareHighlight
     public SquareHighlight2(Square square) : base(square) { }
 }
 
+public class LastMoveHighlight : SquareHighlight
+{
+    public LastMoveHighlight(Square square) : base(square) { }
+}
+
+
 public class Check : LiveBoardElement
 {
     public Check(Square square) : base(square) { }

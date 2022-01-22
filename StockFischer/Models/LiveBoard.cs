@@ -76,10 +76,12 @@ public class LiveBoard : ReactiveObject
             {
                 if (p is null)
                 {
+                    _logger?.LogDebug("piece selection reset");
                     Clear<SquareHighlight>();
                 }
                 else
                 {
+                    _logger?.LogDebug("piece selected {piece}", p);
                     AddLegalMovesHint(p);
                 }
             });
@@ -462,8 +464,6 @@ public class LiveBoard : ReactiveObject
     /// <returns>whether a move was made successfully.</returns>
     public bool TryMakeMove(Square from, Square to)
     {
-        using var _ =_logger?.BeginScope("TryMakeMove(from,to)");
-
         if (from == null || to == null)
         {
             return false;
@@ -476,6 +476,11 @@ public class LiveBoard : ReactiveObject
         }
 
         SelectedPiece = GetElements<LivePiece>().Single(x => x.Square == from);
+
+        if(SelectedPiece is null)
+        {
+            _logger?.LogDebug("No live board element found on {square}", from);
+        }
 
         return TryMakeMove(to);
     }
@@ -808,12 +813,21 @@ public class LiveBoard : ReactiveObject
 
         UpdateGameState(move);
 
+        AddMoveHighlight(move);
+
         RaiseMovePlayed(move);
 
         if (isRewinding == false)
         {
             AddMoveToHistory(move);
         }
+    }
+
+    private void AddMoveHighlight(MoveModel move)
+    {
+        Clear<LastMoveHighlight>();
+        Elements.Add(new LastMoveHighlight(move.OriginSquare));
+        Elements.Add(new LastMoveHighlight(move.TargetSquare));
     }
 
     /// <summary>

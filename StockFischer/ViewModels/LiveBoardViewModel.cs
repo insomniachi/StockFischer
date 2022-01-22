@@ -43,7 +43,7 @@ public class LiveBoardViewModel : ReactiveObject, IRoutableViewModel
             _engine.PotentialVariationCalculated += OnPotentialVariationCalculated;
         }
 
-        CanUseEngine = false;
+        CanUseEngine = _engine is { };
 
         OnBoardChanged(new(null, Board));
 

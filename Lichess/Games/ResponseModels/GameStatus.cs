@@ -1,4 +1,4 @@
-﻿namespace Lichess;
+﻿namespace Lichess.Games;
 
 public class GameStatus
 {

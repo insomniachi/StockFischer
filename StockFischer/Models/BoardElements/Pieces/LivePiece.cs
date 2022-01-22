@@ -17,6 +17,7 @@ public abstract class LivePiece : ReactiveObject, IPiece
     public Square Square { get; private set; }
     public string Image { get; set; }
     public abstract string Glyph { get; }
+    public int ZIndex { get; set; } = 10;
 
     protected LivePiece(Piece piece, Square square)
     {

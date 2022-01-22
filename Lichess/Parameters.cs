@@ -1,11 +1,18 @@
 ﻿namespace Lichess;
 
-public class QueryParameters
+public class Parameters
 {
     public override string ToString() => string.Join("&", GetType()
         .GetProperties()
         .Where(x => x.GetValue(this) is { })
         .Select(x => $"{x.Name.ToCamelCase()}={x.GetValue(this)}"));
+
+    public string ToQueryParameters() => ToString();
+
+    public IEnumerable<KeyValuePair<string, string>> ToPostContent() => GetType()
+            .GetProperties()
+            .Where(x => x.GetValue(this) is { })
+            .Select(x => new KeyValuePair<string, string>(x.Name.ToCamelCase(), x.GetValue(this).ToString().ToCamelCase()));
 }
 
 public static class StringExtension

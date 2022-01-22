@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Lichess;
+namespace Lichess.Games;
 
 public class GameMove
 {

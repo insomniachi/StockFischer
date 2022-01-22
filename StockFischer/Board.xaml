@@ -79,9 +79,13 @@
                 </Ellipse>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type model:ShapeElement}">
+        <DataTemplate DataType="{x:Type model:LastMoveHighlight}">
             <Grid Width="1" Height="1" IsHitTestVisible="False">
-                <Path Data="{Binding Shape}" Fill="Black" Stroke="Black" StrokeThickness="1"/>
+                <Rectangle Width="1" Height="1">
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="Yellow" Opacity="0.3"/>
+                    </Rectangle.Fill>
+                </Rectangle>
             </Grid>
         </DataTemplate>
 
@@ -100,6 +104,7 @@
                     <Style TargetType="FrameworkElement">
                         <Setter Property="Canvas.Left" Value="{Binding Square.File, Converter={StaticResource FileConverterWhite}}"/>
                         <Setter Property="Canvas.Top" Value="{Binding Square.Rank, Converter={StaticResource RankConverterWhite}}"/>
+                        <Setter Property="Canvas.ZIndex" Value="{Binding ZIndex}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Perspective, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Board}}" Value="Black">
                                 <Setter Property="Canvas.Left" Value="{Binding Square.File, Converter={StaticResource FileConverterBlack}}"/>

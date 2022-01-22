@@ -1,4 +1,4 @@
-﻿namespace Lichess;
+﻿namespace Lichess.Board;
 
 public class LichessGame
 {

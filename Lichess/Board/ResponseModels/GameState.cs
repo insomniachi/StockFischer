@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Lichess;
+namespace Lichess.Board;
 
 public class GameState
 {
@@ -23,12 +23,12 @@ public class GameState
 
     [JsonPropertyName("wdraw")]
     public bool WhiteDrawOffer { get; set; }
-    
+
     [JsonPropertyName("bdraw")]
     public bool BlackDrawOffer { get; set; }
 
     [JsonPropertyName("wtakeback")]
-    public bool  WhiteProposeTakeback { get; set; }
+    public bool WhiteProposeTakeback { get; set; }
 
     [JsonPropertyName("btakeback")]
     public bool BlackProposeTakeback { get; set; }

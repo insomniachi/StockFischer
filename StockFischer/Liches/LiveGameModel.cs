@@ -1,4 +1,4 @@
-﻿using Lichess;
+﻿using Lichess.Games;
 using Microsoft.Extensions.Logging;
 using OpenPGN.Models;
 using ReactiveUI;
@@ -6,8 +6,6 @@ using ReactiveUI.Fody.Helpers;
 using StockFischer.Engine;
 using StockFischer.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Windows;
 
@@ -17,10 +15,7 @@ public class LiveGameModel : ReactiveObject
 {
     private readonly ILogger _logger;
     private readonly LiveGameStream _stream;
-    private readonly Game _game;
-    private readonly List<string> _moves;
-    private static ExportGameQueryParameters parameters = new() { Clocks = false, Evals = false, Literate = false};
-    private readonly IObservable<long> _timer;
+    private IObservable<long> _timer;
 
     [Reactive]
     public LiveBoard Board { get; set; }
@@ -35,12 +30,15 @@ public class LiveGameModel : ReactiveObject
     {
         _logger = logger;
         _stream = new LiveGameStream(gameId);
-        _game = Game.FromPgn(new ExportGameRequest(gameId, parameters).GetAsync().Result);
+        _stream.StreamStarted += StreamStarted;
         _stream.MovePlayed += OnMovePlayed;
-
-        Board = LiveBoard.FromGame(_game);
-        _moves = Board.Moves.AsUciMoves().ToList();
         _stream.StartStream();
+    }
+
+    private void StreamStarted(object sender, LiveGameStatus e)
+    {
+        Board = LiveBoard.FromFen(e.Fen);
+        Board.SetLogger(_logger);
 
         _timer = Observable.Interval(TimeSpan.FromSeconds(1));
         _timer.Subscribe(Elapsed);
@@ -65,7 +63,7 @@ public class LiveGameModel : ReactiveObject
 
         _logger.LogDebug("Lichess Move recieved : {move}", e.LastMove);
 
-        if(!_moves.Contains(e.LastMove) && UCIMove.Parse(e.LastMove) is { } move)
+        if (UCIMove.Parse(e.LastMove) is { } move)
         {
             Application.Current.Dispatcher.Invoke(() => Board.TryMakeMove(move.From, move.To));
         }

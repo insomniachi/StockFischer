@@ -6,8 +6,20 @@ namespace Lichess;
 
 public abstract class EventStream
 {
+    private readonly string _token;
+
     public string ApiEndPoint { get; protected set; }
     public static readonly JsonSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    public EventStream()
+    {
+
+    }
+
+    public EventStream(string apiToken)
+    {
+        _token = apiToken;
+    }
 
     public CancellationTokenSource StartStream()
     {
@@ -21,7 +33,12 @@ public abstract class EventStream
     private async Task StartStreamInternal(CancellationToken token)
     {
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "lip_t9J2WY7JKglG66m1JjrF");
+
+        if (!string.IsNullOrEmpty(_token))
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        }
+
         var stream = await client.GetStreamAsync(ApiEndPoint, token).ConfigureAwait(false);
         var sb = new StringBuilder();
 
@@ -41,7 +58,7 @@ public abstract class EventStream
                 var json = sb.ToString();
                 sb.Clear();
 
-                if(string.IsNullOrEmpty(json))
+                if (string.IsNullOrEmpty(json))
                 {
                     continue;
                 }

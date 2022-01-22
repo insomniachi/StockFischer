@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Lichess;
+namespace Lichess.Games;
 
 public class LiveGameStream : EventStream
 {
@@ -16,26 +16,15 @@ public class LiveGameStream : EventStream
         ApiEndPoint = $"https://lichess.org/api/stream/game/{id}";
     }
 
-
     protected override void ProcessJson(string json)
     {
         if (json.Contains("wc") && JsonSerializer.Deserialize<GameMove>(json, Options) is { } move)
         {
-            var isLastMove = move.LastMove == lastMove;
-            if(isLastMove)
-            {
-                lastMoveEncountered = true;
-            }
-
-            if(!isLastMove && lastMoveEncountered)
-            {
-                MovePlayed?.Invoke(this, move);
-            }
-
+            MovePlayed?.Invoke(this, move);
         }
         else if (json.Contains("id") && JsonSerializer.Deserialize<LiveGameStatus>(json, Options) is { } gs)
         {
-            if(string.IsNullOrEmpty(gs.Winner))
+            if (string.IsNullOrEmpty(gs.Winner))
             {
                 lastMove = gs.LastMove;
                 StreamStarted?.Invoke(this, gs);

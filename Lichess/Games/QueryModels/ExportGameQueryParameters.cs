@@ -1,6 +1,6 @@
-﻿namespace Lichess;
+﻿namespace Lichess.Games;
 
-public class ExportGameQueryParameters : QueryParameters
+public class ExportGameQueryParameters : Parameters
 {
     public bool Moves { get; set; } = true;
     public bool PgnInJson { get; set; }
