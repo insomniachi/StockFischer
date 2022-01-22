@@ -1,11 +1,12 @@
 ﻿using Lichess.Board;
 using Lichess.Games;
+using Lichess.TV;
 
 namespace Lichess;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         //var game = new LiveGameStream("hSP5aPPx");
         //game.StreamStarted += Game_StreamStarted1;
@@ -17,10 +18,24 @@ public class Program
 
         //var cts = game.StartStream();
 
-        var game = new ExportGameRequest("CCJbDIFL");
-        Console.WriteLine(game.GetAsync().Result);
+        //var game = new CurrentTvGameStream();
+        //game.StreamStarted += Game_StreamStarted2;
+        //game.MovePlayed += Game_MovePlayed1;
+        //game.StartStream();
+
+        var test = await new GetCurrentTvGamesRequest().GetAsync();
 
         Console.ReadKey();
+    }
+
+    private static void Game_MovePlayed1(object sender, CurrentTvGameMove e)
+    {
+        Console.WriteLine(e.Details.LastMove);
+    }
+
+    private static void Game_StreamStarted2(object sender, CurrentTvGame e)
+    {
+        Console.WriteLine(e.Details.Id);
     }
 
     private static void Game_MovePlayed(object sender, GameMove e)

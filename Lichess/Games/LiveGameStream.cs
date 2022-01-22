@@ -4,9 +4,6 @@ namespace Lichess.Games;
 
 public class LiveGameStream : EventStream
 {
-    private string lastMove;
-    private bool lastMoveEncountered;
-
     public event EventHandler<LiveGameStatus> StreamStarted;
     public event EventHandler<GameMove> MovePlayed;
     public event EventHandler<LiveGameStatus> StreamEnded;
@@ -26,7 +23,6 @@ public class LiveGameStream : EventStream
         {
             if (string.IsNullOrEmpty(gs.Winner))
             {
-                lastMove = gs.LastMove;
                 StreamStarted?.Invoke(this, gs);
             }
             else

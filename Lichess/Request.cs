@@ -33,6 +33,28 @@ public class Request
         return await GetResponse(response);
     }
 
+    public static async Task<T> GetAsync<T>(string endPoint, string token = null)
+        where T : new()
+    {
+        using var client = new HttpClient();
+        if (string.IsNullOrEmpty(token) == false)
+        {
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+        }
+
+        var response = await client.GetAsync(endPoint);
+
+        if(response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<T>(result, EventStream.Options);
+        }
+        else
+        {
+            return new();
+        }
+    }
+
     public static async ValueTask<Response> GetResponse(HttpResponseMessage message)
     {
         if (message.IsSuccessStatusCode)
